@@ -1,112 +1,158 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>yzycat.</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>yzycat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;800&display=swap" rel="stylesheet">
 <style>
-* {
-    margin: 0;
-    padding: 0;
+:root {
+    --bg: #000;
+    --fg: #f2f2f2;
+    --mute: #8a8a8a;
+    --line: #292929;
+    --font: "Syne", "Helvetica Neue", Arial, sans-serif;
+    --mx: 50%;
+    --my: 50%;
     box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+html { height: 100%; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    background: #000;
-    color: white;
-    font-family: Arial, sans-serif;
-    height: 100vh;
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
     overflow: hidden;
 }
 
+a:focus-visible, #handle:focus-visible {
+    outline: 2px solid var(--fg);
+    outline-offset: 4px;
+}
+
+/* ---------- site ---------- */
 #website {
     position: fixed;
     inset: 0;
-    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: max(32px, env(safe-area-inset-top, 0px)) 5% max(32px, env(safe-area-inset-bottom, 0px));
+    background:
+        radial-gradient(520px circle at var(--mx) var(--my), #ffffff12, transparent 70%),
+        var(--bg);
 }
 
-.home {
-    position: absolute;
-    top: 32px;
-    left: 5%;
+nav {
+    display: flex;
+    gap: 28px;
+    font-size: 13px;
+    letter-spacing: .04em;
 }
-
-.home a {
-    color: #888;
+nav a {
+    color: var(--mute);
     text-decoration: none;
-    font-size: 11px;
-    letter-spacing: 2px;
     transition: color .2s;
 }
+nav a:hover, nav a[aria-current] { color: var(--fg); }
 
-.home a:hover {
-    color: white;
+.hero h1 {
+    font-weight: 800;
+    font-size: clamp(64px, 19vw, 280px);
+    line-height: .85;
+    letter-spacing: -.045em;
+    margin-left: -.04em;
+}
+.hero h1 span { display: inline-block; }
+.hero p {
+    margin-top: 22px;
+    color: var(--mute);
+    font-weight: 500;
+    font-size: clamp(14px, 1.6vw, 18px);
 }
 
+/* one orchestrated moment: letters rise once after the intro */
+body.ready .hero h1 span {
+    animation: rise .9s cubic-bezier(.2,.8,.2,1) both;
+    animation-delay: calc(var(--i) * 70ms);
+}
+@keyframes rise {
+    from { opacity: 0; transform: translateY(40%); filter: blur(10px); }
+    to   { opacity: 1; transform: none; filter: blur(0); }
+}
+body:not(.ready) .hero h1 span { opacity: 0; }
+
+/* ---------- intro ---------- */
 #intro {
     position: fixed;
     inset: 0;
     z-index: 10;
-    background: #000;
+    background: var(--bg);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 56px;
     transition: opacity .8s ease;
+}
+#intro.done { opacity: 0; pointer-events: none; }
+
+#mark {
+    font-weight: 800;
+    font-size: clamp(36px, 9vw, 64px);
+    letter-spacing: -.03em;
+    opacity: .12;
+    filter: blur(8px);
 }
 
 #slider {
     position: relative;
     width: min(320px, 65vw);
     height: 2px;
-    background: #292929;
+    background: var(--line);
     border-radius: 10px;
+    touch-action: none;
 }
+/* bigger invisible hit area for fingers */
+#slider::before { content: ""; position: absolute; inset: -22px -10px; }
 
 #progress {
     position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 0%;
-    background: #fff;
+    inset: 0 auto 0 0;
+    width: 0;
+    background: var(--fg);
     border-radius: 10px;
 }
-
 #handle {
     position: absolute;
     left: 0;
     top: 50%;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    background: #f2f2f2;
+    background: var(--fg);
     transform: translate(-50%, -50%);
     cursor: grab;
     touch-action: none;
     box-shadow: 0 0 15px #ffffff18;
     transition: box-shadow .2s;
 }
-
-#handle:hover {
-    box-shadow: 0 0 22px #ffffff55;
-}
-
-#handle:active {
-    cursor: grabbing;
-}
-
-#intro.done {
-    opacity: 0;
-    pointer-events: none;
-}
+#handle:hover { box-shadow: 0 0 24px #ffffff55; }
+#handle:active { cursor: grabbing; }
+#hint { color: var(--mute); font-size: 12px; letter-spacing: .04em; }
 
 @media (max-width: 600px) {
-    .home {
-        left: 25px;
-        top: 25px;
-    }
+    nav { gap: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.ready .hero h1 span { animation: none; }
+    #intro { transition: none; }
 }
 </style>
 </head>
@@ -114,16 +160,25 @@ body {
 <body>
 
 <main id="website">
-    <nav class="home">
-        <a href="#">HOME</a>
+    <nav aria-label="Main">
+        <a href="#" aria-current="page">home</a>
+        <a href="#">work</a>
+        <a href="#">contact</a>
     </nav>
+
+    <header class="hero">
+        <h1 aria-label="yzycat"><span style="--i:0" aria-hidden="true">y</span><span style="--i:1" aria-hidden="true">z</span><span style="--i:2" aria-hidden="true">y</span><span style="--i:3" aria-hidden="true">c</span><span style="--i:4" aria-hidden="true">a</span><span style="--i:5" aria-hidden="true">t</span><span style="--i:6" aria-hidden="true">.</span></h1>
+        <p>Welcome in.</p>
+    </header>
 </main>
 
 <div id="intro">
+    <div id="mark" aria-hidden="true">yzycat</div>
     <div id="slider">
         <div id="progress"></div>
-        <div id="handle"></div>
+        <div id="handle" role="slider" tabindex="0" aria-label="Slide to enter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
     </div>
+    <div id="hint">slide to enter</div>
 </div>
 
 <script>
@@ -131,82 +186,82 @@ const intro = document.getElementById("intro");
 const slider = document.getElementById("slider");
 const handle = document.getElementById("handle");
 const progress = document.getElementById("progress");
+const mark = document.getElementById("mark");
+const site = document.getElementById("website");
 
-let dragging = false;
-let completed = false;
-let pointerId = null;
-let position = 0;
+let dragging = false, completed = false, pointerId = null, pct = 0;
 
-function update(x) {
-    const rect = slider.getBoundingClientRect();
-    const max = rect.width;
+function render(p, animate) {
+    pct = Math.max(0, Math.min(p, 100));
+    const t = animate ? ".35s ease" : "";
+    handle.style.transition = animate ? "left " + t : "";
+    progress.style.transition = animate ? "width " + t : "";
+    handle.style.left = pct + "%";
+    progress.style.width = pct + "%";
+    handle.setAttribute("aria-valuenow", Math.round(pct));
+    // wordmark sharpens as you slide
+    mark.style.opacity = .12 + pct / 100 * .88;
+    mark.style.filter = "blur(" + (8 - pct / 100 * 8) + "px)";
+}
 
-    position = Math.max(0, Math.min(x - rect.left, max));
-
-    const percent = position / max * 100;
-
-    handle.style.left = percent + "%";
-    progress.style.width = percent + "%";
-
-    if (percent >= 98) {
-        complete();
-    }
+function fromPointer(x) {
+    const r = slider.getBoundingClientRect();
+    return (x - r.left) / r.width * 100;
 }
 
 function complete() {
     if (completed) return;
-
     completed = true;
     dragging = false;
-
-    handle.style.left = "100%";
-    progress.style.width = "100%";
-
+    render(100, true);
     intro.classList.add("done");
+    document.body.classList.add("ready");
+    document.body.style.overflow = "auto";
+    setTimeout(() => intro.remove(), 850);
+}
 
-    setTimeout(() => {
-        intro.remove();
-        document.body.style.overflow = "auto";
-    }, 850);
+function settle() {
+    if (completed) return;
+    if (pct >= 98) complete(); else render(0, true);
 }
 
 handle.addEventListener("pointerdown", e => {
     if (completed || dragging) return;
-
     dragging = true;
     pointerId = e.pointerId;
     handle.setPointerCapture(pointerId);
 });
-
 handle.addEventListener("pointermove", e => {
     if (!dragging || completed || e.pointerId !== pointerId) return;
-
-    update(e.clientX);
+    render(fromPointer(e.clientX));
+    if (pct >= 98) complete();
 });
-
 function release(e) {
-    if (!dragging || completed || e.pointerId !== pointerId) return;
-
+    if (!dragging || e.pointerId !== pointerId) return;
     dragging = false;
     pointerId = null;
-
-    if (position < slider.clientWidth * .98) {
-        handle.style.transition = "left .35s ease";
-        progress.style.transition = "width .35s ease";
-
-        position = 0;
-        handle.style.left = "0%";
-        progress.style.width = "0%";
-
-        setTimeout(() => {
-            handle.style.transition = "";
-            progress.style.transition = "";
-        }, 400);
-    }
+    settle();
 }
-
 handle.addEventListener("pointerup", release);
 handle.addEventListener("pointercancel", release);
+
+// keyboard: arrows nudge, Enter / End finish, Home resets
+handle.addEventListener("keydown", e => {
+    if (completed) return;
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") render(pct + 10, true);
+    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") render(pct - 10, true);
+    else if (e.key === "Enter" || e.key === "End") render(100, true);
+    else if (e.key === "Home") render(0, true);
+    else return;
+    e.preventDefault();
+    if (pct >= 98) complete();
+});
+
+// soft spotlight follows the pointer
+site.addEventListener("pointermove", e => {
+    site.style.setProperty("--mx", e.clientX + "px");
+    site.style.setProperty("--my", e.clientY + "px");
+});
 </script>
 
 </body>
