@@ -77,36 +77,33 @@ nav a:hover, nav a[aria-current] { color: var(--fg); }
     font-size: clamp(14px, 1.6vw, 18px);
 }
 
-/* one orchestrated moment: letters rise once after the intro */
-body.ready .hero h1 span {
-    animation: rise .9s cubic-bezier(.2,.8,.2,1) both;
-    animation-delay: calc(var(--i) * 70ms);
-}
-@keyframes rise {
-    from { opacity: 0; transform: translateY(40%); filter: blur(10px); }
-    to   { opacity: 1; transform: none; filter: blur(0); }
-}
-body:not(.ready) .hero h1 span { opacity: 0; }
+/* title stays hidden until the intro wordmark lands on it */
+body:not(.landed) .hero h1 span { opacity: 0; }
 
 /* ---------- intro ---------- */
 #intro {
     position: fixed;
     inset: 0;
-    z-index: 10;
-    background: var(--bg);
+    z-index: 11;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 56px;
-    transition: opacity .8s ease;
 }
-#intro.done { opacity: 0; pointer-events: none; }
+#veil { position: fixed; inset: 0; z-index: 10; background: var(--bg); transition: opacity .9s ease; }
+#veil.done { opacity: 0; pointer-events: none; }
+#intro.done { pointer-events: none; }
+#intro.done #slider, #intro.done #hint { opacity: 0; transition: opacity .4s ease; }
 
 #mark {
     font-weight: 800;
     font-size: clamp(36px, 9vw, 64px);
-    letter-spacing: -.03em;
+    letter-spacing: -.045em;
+    line-height: .85;
+    display: inline-block;
+    white-space: nowrap;
+    transform-origin: 0 0;
     opacity: .12;
     filter: blur(8px);
 }
@@ -151,8 +148,7 @@ body:not(.ready) .hero h1 span { opacity: 0; }
     nav { gap: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
-    body.ready .hero h1 span { animation: none; }
-    #intro { transition: none; }
+    #veil, #mark { transition: none !important; }
 }
 </style>
 </head>
@@ -172,6 +168,8 @@ body:not(.ready) .hero h1 span { opacity: 0; }
     </header>
 </main>
 
+<div id="veil"></div>
+
 <div id="intro">
     <div id="mark" aria-hidden="true">yzycat</div>
     <div id="slider">
@@ -183,6 +181,7 @@ body:not(.ready) .hero h1 span { opacity: 0; }
 
 <script>
 const intro = document.getElementById("intro");
+const veil = document.getElementById("veil");
 const slider = document.getElementById("slider");
 const handle = document.getElementById("handle");
 const progress = document.getElementById("progress");
@@ -215,9 +214,27 @@ function complete() {
     dragging = false;
     render(100, true);
     intro.classList.add("done");
-    document.body.classList.add("ready");
+    veil.classList.add("done");
     document.body.style.overflow = "auto";
-    setTimeout(() => intro.remove(), 850);
+    flyToTitle();
+}
+
+// glide the intro wordmark onto the bottom-left title, then swap in the real one
+function flyToTitle() {
+    const h1 = document.querySelector(".hero h1");
+    const first = h1.querySelector("span").getBoundingClientRect();
+    const m = mark.getBoundingClientRect();
+    const s = parseFloat(getComputedStyle(h1).fontSize) / parseFloat(getComputedStyle(mark).fontSize);
+    const land = () => {
+        document.body.classList.add("landed");
+        mark.style.visibility = "hidden";
+        setTimeout(() => { intro.remove(); veil.remove(); }, 60);
+    };
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return land();
+    mark.style.transition = "transform 1.1s cubic-bezier(.65,0,.25,1)";
+    mark.style.transform = "translate(" + (first.left - m.left) + "px," + (first.top - m.top) + "px) scale(" + s + ")";
+    mark.addEventListener("transitionend", e => { if (e.propertyName === "transform") land(); }, { once: true });
+    setTimeout(land, 1500);
 }
 
 function settle() {
