@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>untitled.</title>
+<title>yzycat</title>
 
 <style>
 * {
@@ -13,249 +13,467 @@
     box-sizing: border-box;
 }
 
+:root {
+    --black: #050505;
+    --white: #f1f1f1;
+    --muted: #777;
+}
+
 body {
-    background: #000;
-    color: #fff;
-    font-family: Arial, sans-serif;
+    background: var(--black);
+    color: var(--white);
+    font-family: Arial, Helvetica, sans-serif;
     overflow: hidden;
 }
 
+/* MAIN WEBSITE */
+
 #website {
-    min-height: 100vh;
+    min-height: 100svh;
+    background: var(--black);
+    position: relative;
+    padding: 35px 5%;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 17px;
+    letter-spacing: -1px;
+    font-weight: 600;
+}
+
+.nav-links {
+    display: flex;
+    gap: 35px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #777;
+    font-size: 10px;
+    letter-spacing: 2px;
+    transition: color .3s;
+}
+
+.nav-links a:hover {
+    color: white;
+}
+
+.hero {
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    text-align: center;
 }
 
-#website h1 {
-    font-size: clamp(50px, 9vw, 110px);
+.hero h1 {
+    font-size: clamp(65px, 12vw, 160px);
+    letter-spacing: -9px;
     font-weight: 400;
-    letter-spacing: -6px;
+    line-height: .9;
 }
 
-#website nav {
-    display: flex;
-    gap: 35px;
-    margin-top: 35px;
-}
-
-#website a {
+.hero p {
     color: #777;
-    text-decoration: none;
-    font-size: 11px;
-    letter-spacing: 2px;
-    transition: color .2s;
+    font-size: 10px;
+    letter-spacing: 4px;
+    margin-top: 25px;
 }
 
-#website a:hover {
-    color: white;
+.footer {
+    display: flex;
+    justify-content: space-between;
+    color: #555;
+    font-size: 10px;
+    letter-spacing: 2px;
 }
+
+/* OPENING SCREEN */
 
 #opening {
     position: fixed;
     inset: 0;
-    z-index: 10;
-    pointer-events: none;
+    z-index: 100;
+    overflow: hidden;
+    background: transparent;
 }
+
+/* BLACK PANELS */
 
 .panel {
     position: absolute;
-    left: 0;
     width: 100%;
-    height: 50%;
-    background: #000;
-    transition: none;
+    height: 50.3%;
+    left: 0;
+    background: #030303;
+    will-change: transform;
 }
 
 #top {
     top: 0;
+    clip-path: polygon(
+        0 0, 100% 0, 100% 100%,
+        96% 99.5%, 92% 100%,
+        88% 99.4%, 84% 100%,
+        80% 99.5%, 76% 100%,
+        72% 99.3%, 68% 100%,
+        64% 99.5%, 60% 100%,
+        56% 99.4%, 52% 100%,
+        48% 99.4%, 44% 100%,
+        40% 99.5%, 36% 100%,
+        32% 99.3%, 28% 100%,
+        24% 99.5%, 20% 100%,
+        16% 99.4%, 12% 100%,
+        8% 99.5%, 4% 100%,
+        0 99.4%
+    );
 }
 
 #bottom {
     bottom: 0;
+    clip-path: polygon(
+        0 0,
+        4% .6%, 8% 0,
+        12% .5%, 16% 0,
+        20% .6%, 24% 0,
+        28% .5%, 32% 0,
+        36% .7%, 40% 0,
+        44% .5%, 48% 0,
+        52% .6%, 56% 0,
+        60% .5%, 64% 0,
+        68% .7%, 72% 0,
+        76% .5%, 80% 0,
+        84% .6%, 88% 0,
+        92% .5%, 96% 0,
+        100% .6%,
+        100% 100%, 0 100%
+    );
 }
+
+/* PULL LINE */
 
 #pullLine {
     position: absolute;
-    left: 0;
     top: 50%;
+    left: 0;
     width: 100%;
     height: 1px;
-    background: #292929;
+    background: rgba(255,255,255,.22);
     transform: translateY(-50%);
+    transition: opacity .2s;
     pointer-events: none;
 }
+
+#pullLine::before,
+#pullLine::after {
+    content: "";
+    position: absolute;
+    top: -1px;
+    width: 15%;
+    height: 3px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.12)
+    );
+}
+
+#pullLine::before {
+    left: 0;
+}
+
+#pullLine::after {
+    right: 0;
+    transform: rotate(180deg);
+}
+
+/* HANDLE */
 
 #handle {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 48px;
-    height: 48px;
-    transform: translate(-50%, -50%);
-    border: 1px solid #444;
+    width: 42px;
+    height: 42px;
+    border: 1px solid #454545;
     border-radius: 50%;
-    background: #080808;
+    background: #090909;
+    transform: translate(-50%, -50%);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     cursor: grab;
-    pointer-events: auto;
     touch-action: none;
-    transition: border-color .2s;
+    user-select: none;
+    z-index: 5;
+    box-shadow: 0 0 25px #000;
+    transition: border-color .25s, box-shadow .25s;
 }
 
 #handle:hover {
-    border-color: #aaa;
+    border-color: #999;
+    box-shadow: 0 0 20px #ffffff15;
 }
 
 #handle:active {
     cursor: grabbing;
 }
 
-#handle::after {
-    content: "";
+#handle span {
     width: 5px;
     height: 5px;
     background: #aaa;
     border-radius: 50%;
+    transition: transform .2s, background .2s;
 }
 
-#opening.opening {
-    pointer-events: none;
+#handle:hover span {
+    background: white;
+    transform: scale(1.4);
+}
+
+/* DRAGGING */
+
+#opening.dragging #handle {
+    border-color: #aaa;
+    box-shadow: 0 0 35px #ffffff12;
+}
+
+#opening.dragging #handle span {
+    background: white;
+    transform: scale(1.4);
+}
+
+/* OPENING ANIMATION */
+
+#opening.releasing .panel {
+    transition: transform 1.15s cubic-bezier(.76, 0, .24, 1);
+}
+
+#opening.releasing #handle {
+    transition: opacity .35s ease;
+    opacity: 0;
+}
+
+#opening.releasing #pullLine {
+    transition: opacity .4s ease;
+    opacity: 0;
 }
 
 #opening.finished {
     display: none;
+}
+
+@media (max-width: 600px) {
+    #website {
+        padding: 25px;
+    }
+
+    .nav-links {
+        gap: 15px;
+    }
+
+    .nav-links a {
+        font-size: 9px;
+    }
+
+    .hero h1 {
+        letter-spacing: -5px;
+    }
+
+    .footer {
+        font-size: 8px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #website,
+    #handle,
+    .panel {
+        transition-duration: .01ms !important;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<main id="website">
-    <h1>untitled.</h1>
+<!-- MAIN WEBSITE -->
 
-    <nav>
-        <a href="#">ABOUT</a>
-        <a href="#">WORK</a>
-        <a href="#">CONTACT</a>
-    </nav>
+<main id="website">
+
+    <header class="navbar">
+        <div class="logo">untitled.</div>
+
+        <nav class="nav-links">
+            <a href="#">ABOUT</a>
+            <a href="#">PROJECTS</a>
+            <a href="#">CONTACT</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>untitled.</h1>
+        <p>WELCOME TO MY WORLD.</p>
+    </section>
+
+    <footer class="footer">
+        <span>© 2026</span>
+        <span>INDEPENDENTLY CREATED</span>
+    </footer>
+
 </main>
 
+<!-- OPENING TRANSITION -->
+
 <div id="opening">
+
     <div class="panel" id="top"></div>
     <div class="panel" id="bottom"></div>
 
     <div id="pullLine"></div>
-    <div id="handle"></div>
+
+    <div id="handle">
+        <span></span>
+    </div>
+
 </div>
 
 <script>
 const opening = document.getElementById("opening");
 const topPanel = document.getElementById("top");
 const bottomPanel = document.getElementById("bottom");
-const line = document.getElementById("pullLine");
 const handle = document.getElementById("handle");
+const pullLine = document.getElementById("pullLine");
 
 let dragging = false;
-let startY = 0;
-let pull = 0;
 let opened = false;
 
-const maxPull = window.innerHeight * 0.48;
-const threshold = window.innerHeight * 0.25;
+let startY = 0;
+let pull = 0;
 
-function update(value) {
-    pull = Math.max(0, Math.min(value, maxPull));
+const threshold = () => window.innerHeight * 0.23;
+const maxPull = () => window.innerHeight * 0.48;
 
-    const progress = pull / maxPull;
+function updatePull(value) {
+    pull = Math.max(0, Math.min(value, maxPull()));
+
+    const progress = pull / maxPull();
+
+    // Separate the two halves of the screen.
+    const separation = pull * 0.92;
 
     topPanel.style.transform =
-        `translateY(${-pull * 0.85}px)`;
+        `translate3d(0, ${-separation}px, 0)`;
 
     bottomPanel.style.transform =
-        `translateY(${pull * 0.85}px)`;
+        `translate3d(0, ${separation}px, 0)`;
 
-    line.style.transform =
-        `translateY(${pull}px)`;
+    // Move the handle with the user's pointer.
+    handle.style.top = `calc(50% + ${pull}px)`;
 
-    handle.style.top =
-        `calc(50% + ${pull}px)`;
+    // Stretch the center line.
+    pullLine.style.transform =
+        `translate3d(0, ${pull}px, 0) scaleX(${1 - progress * .2})`;
 
-    handle.style.transform =
-        `translate(-50%, -50%) scale(${1 + progress * 0.15})`;
-
-    handle.style.borderColor =
-        progress > 0.5 ? "#aaa" : "#444";
+    // Subtle resistance.
+    handle.style.scale = `${1 + progress * .12}`;
 }
 
-function reset() {
-    topPanel.style.transition = "transform .7s cubic-bezier(.2,.8,.2,1)";
-    bottomPanel.style.transition = "transform .7s cubic-bezier(.2,.8,.2,1)";
-    line.style.transition = "transform .7s ease";
-    handle.style.transition = "top .7s ease, transform .7s ease";
+function resetPull() {
+    opening.classList.remove("dragging");
 
-    update(0);
+    topPanel.style.transition =
+        "transform .75s cubic-bezier(.2,.8,.2,1)";
+
+    bottomPanel.style.transition =
+        "transform .75s cubic-bezier(.2,.8,.2,1)";
+
+    handle.style.transition =
+        "top .75s cubic-bezier(.2,.8,.2,1), scale .3s";
+
+    pullLine.style.transition =
+        "transform .75s cubic-bezier(.2,.8,.2,1)";
+
+    updatePull(0);
 
     setTimeout(() => {
         topPanel.style.transition = "";
         bottomPanel.style.transition = "";
-        line.style.transition = "";
         handle.style.transition = "";
-    }, 750);
+        pullLine.style.transition = "";
+    }, 800);
 }
 
+function openWebsite() {
+    if (opened) return;
+
+    opened = true;
+    dragging = false;
+
+    opening.classList.remove("dragging");
+    opening.classList.add("releasing");
+
+    requestAnimationFrame(() => {
+        topPanel.style.transform =
+            "translate3d(0, -110vh, 0)";
+
+        bottomPanel.style.transform =
+            "translate3d(0, 110vh, 0)";
+    });
+
+    setTimeout(() => {
+        opening.classList.add("finished");
+        document.body.style.overflow = "auto";
+    }, 1250);
+}
+
+// Begin dragging.
 handle.addEventListener("pointerdown", (e) => {
     if (opened) return;
 
     dragging = true;
     startY = e.clientY;
+    
+    opening.classList.add("dragging");
+
     handle.setPointerCapture(e.pointerId);
 });
 
+// Follow pointer.
 handle.addEventListener("pointermove", (e) => {
     if (!dragging || opened) return;
 
-    update(e.clientY - startY);
+    const distance = e.clientY - startY;
+
+    updatePull(distance);
 });
 
-function finish() {
-    if (!dragging) return;
+// Release.
+function release() {
+    if (!dragging || opened) return;
 
     dragging = false;
 
-    if (pull >= threshold) {
-        opened = true;
-        opening.classList.add("opening");
-
-        topPanel.style.transition =
-            "transform .85s cubic-bezier(.7,0,.2,1)";
-
-        bottomPanel.style.transition =
-            "transform .85s cubic-bezier(.7,0,.2,1)";
-
-        line.style.transition = "opacity .4s ease";
-        handle.style.transition = "opacity .3s ease";
-
-        topPanel.style.transform = "translateY(-110vh)";
-        bottomPanel.style.transform = "translateY(110vh)";
-
-        line.style.opacity = "0";
-        handle.style.opacity = "0";
-
-        setTimeout(() => {
-            opening.classList.add("finished");
-            document.body.style.overflow = "auto";
-        }, 900);
+    if (pull >= threshold()) {
+        openWebsite();
     } else {
-        reset();
+        resetPull();
     }
 }
 
-handle.addEventListener("pointerup", finish);
-handle.addEventListener("pointercancel", finish);
+handle.addEventListener("pointerup", release);
+handle.addEventListener("pointercancel", release);
+
 </script>
 
 </body>
