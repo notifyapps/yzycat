@@ -21,13 +21,10 @@ html, body {
     overflow: hidden;
 }
 
-#website {
+#site {
     position: fixed;
     inset: 0;
     background: #030303;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .home {
@@ -37,10 +34,10 @@ html, body {
 }
 
 .home a {
-    color: #aaa;
-    text-decoration: none;
+    color: #888;
     font-size: 11px;
     letter-spacing: 2px;
+    text-decoration: none;
     transition: color .2s;
 }
 
@@ -48,195 +45,359 @@ html, body {
     color: white;
 }
 
-#opening {
+#seal {
     position: fixed;
     inset: 0;
     z-index: 10;
+    overflow: hidden;
     touch-action: none;
+    --tear: 0px;
 }
 
-.panel {
+#cover {
     position: absolute;
-    left: 0;
-    width: 100%;
-    height: 50.5%;
-    background: #030303;
-    will-change: transform;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 50% 50%, #090909, #020202 75%);
+    clip-path: polygon(
+        0 0, 100% 0, 100% 100%, 0 100%
+    );
+    will-change: clip-path;
 }
 
-#top {
+#tear-edge {
+    position: absolute;
     top: 0;
-}
-
-#bottom {
     bottom: 0;
+    left: 0;
+    width: 24px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #fff3,
+        #fff9,
+        #fff2,
+        transparent
+    );
+    filter: blur(5px);
 }
 
-#line {
+#track {
     position: absolute;
     top: 50%;
     left: 0;
     width: 100%;
     height: 1px;
-    background: #333;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #303030 10%,
+        #444 50%,
+        #303030 90%,
+        transparent
+    );
     transform: translateY(-50%);
     pointer-events: none;
 }
 
-#handle {
+#grip {
     position: absolute;
     top: 50%;
-    left: 50%;
-    width: 40px;
-    height: 40px;
-    border: 1px solid #444;
-    border-radius: 50%;
-    background: #080808;
+    left: 12%;
+    width: 62px;
+    height: 42px;
     transform: translate(-50%, -50%);
-    display: grid;
-    place-items: center;
+    background: linear-gradient(
+        145deg,
+        #e9e8e2,
+        #aaa99f
+    );
+    border-radius: 3px;
+    box-shadow:
+        0 3px 8px #000,
+        0 0 0 1px #ffffff25,
+        inset 0 1px 1px #ffffffaa,
+        inset 0 -2px 3px #0003;
     cursor: grab;
     touch-action: none;
     user-select: none;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
 }
 
-#handle:active {
+#grip:active {
     cursor: grabbing;
 }
 
-#handle span {
-    width: 4px;
-    height: 4px;
-    background: #aaa;
+#grip span {
+    width: 2px;
+    height: 13px;
+    background: #77766e;
+    border-radius: 2px;
+    box-shadow: 1px 0 #fff5;
+}
+
+#grip::before,
+#grip::after {
+    content: "";
+    position: absolute;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
+    background: #88877e;
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: inset 0 1px 1px #0005;
 }
 
-#opening.dragging #handle {
-    border-color: #aaa;
+#grip::before {
+    left: 7px;
 }
 
-#opening.releasing .panel {
-    transition: transform 1s cubic-bezier(.76,0,.24,1);
+#grip::after {
+    right: 7px;
 }
 
-#opening.releasing #handle,
-#opening.releasing #line {
+#seal.dragging #grip {
+    background: linear-gradient(145deg, #fff, #c9c8c0);
+    box-shadow:
+        0 5px 15px #000,
+        0 0 20px #ffffff16,
+        inset 0 1px 2px white;
+}
+
+#rip {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    transform: translateY(-50%);
+    pointer-events: none;
     opacity: 0;
-    transition: opacity .3s;
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        #ffffff18,
+        transparent
+    );
 }
 
-#opening.finished {
+#seal.opening #cover {
+    transition: clip-path 1s cubic-bezier(.7,0,.2,1);
+}
+
+#seal.opening #grip,
+#seal.opening #track,
+#seal.opening #rip,
+#seal.opening #tear-edge {
+    transition: opacity .3s;
+    opacity: 0;
+}
+
+#seal.finished {
     display: none;
+}
+
+@media(max-width: 600px) {
+    .home {
+        top: 25px;
+        left: 25px;
+    }
+
+    #grip {
+        width: 56px;
+        height: 40px;
+    }
 }
 </style>
 </head>
 <body>
 
-<main id="website">
+<main id="site">
     <nav class="home">
         <a href="#">HOME</a>
     </nav>
 </main>
 
-<div id="opening">
-    <div class="panel" id="top"></div>
-    <div class="panel" id="bottom"></div>
-    <div id="line"></div>
-    <div id="handle"><span></span></div>
+<div id="seal">
+    <div id="cover"></div>
+    <div id="tear-edge"></div>
+    <div id="track"></div>
+    <div id="rip"></div>
+
+    <div id="grip">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
 </div>
 
 <script>
-const opening = document.getElementById("opening");
-const topPanel = document.getElementById("top");
-const bottomPanel = document.getElementById("bottom");
-const handle = document.getElementById("handle");
-const line = document.getElementById("line");
+const seal = document.getElementById("seal");
+const cover = document.getElementById("cover");
+const grip = document.getElementById("grip");
+const edge = document.getElementById("tear-edge");
+const track = document.getElementById("track");
+const rip = document.getElementById("rip");
 
 let dragging = false;
 let opened = false;
-let startY = 0;
-let pull = 0;
-let pointerId = null;
+let startX = 0;
+let startPosition = 0;
+let position = 0;
+let pointer = null;
 
-const threshold = () => innerHeight * .23;
-const maximum = () => innerHeight * .48;
+const width = () => window.innerWidth;
+const startPositionDefault = () => width() * .12;
 
-function update(value) {
-    pull = Math.max(0, Math.min(value, maximum()));
+function jaggedEdge(x) {
+    const w = width();
+    const points = [];
 
-    const progress = pull / maximum();
+    points.push(`0px 0px`);
+    points.push(`${w}px 0px`);
+    points.push(`${w}px 100%`);
+    points.push(`${x}px 100%`);
 
-    topPanel.style.transform = `translateY(${-pull}px)`;
-    bottomPanel.style.transform = `translateY(${pull}px)`;
+    const steps = 55;
 
-    handle.style.top = `calc(50% + ${pull}px)`;
-    handle.style.scale = 1 + progress * .1;
+    for (let i = steps; i >= 0; i--) {
+        const y = i / steps;
+        const offset = Math.sin(i * 2.37) * 4 +
+                       Math.sin(i * 4.1) * 2;
 
-    line.style.transform = `translateY(${pull}px)`;
+        points.push(
+            `${Math.max(0, x + offset)}px ${y * 100}%`
+        );
+    }
+
+    points.push(`0px 0px`);
+
+    return `polygon(${points.join(",")})`;
+}
+
+function render(value) {
+    position = Math.max(
+        startPositionDefault(),
+        Math.min(value, width() * 1.15)
+    );
+
+    const progress = Math.min(
+        (position - startPositionDefault()) /
+        (width() - startPositionDefault()),
+        1
+    );
+
+    cover.style.clipPath = jaggedEdge(position);
+
+    grip.style.left = `${position}px`;
+
+    edge.style.left = `${position}px`;
+    edge.style.opacity = progress > 0 ? ".8" : "0";
+
+    rip.style.left = `${position}px`;
+    rip.style.width = `${Math.max(0, position - startPositionDefault())}px`;
+    rip.style.opacity = progress > 0 ? ".7" : "0";
+
+    grip.style.transform =
+        `translate(-50%, -50%) rotate(${progress * 3}deg)`;
 }
 
 function reset() {
-    topPanel.style.transition = "transform .7s cubic-bezier(.2,.8,.2,1)";
-    bottomPanel.style.transition = "transform .7s cubic-bezier(.2,.8,.2,1)";
-    handle.style.transition = "top .7s ease, scale .3s";
-    line.style.transition = "transform .7s ease";
+    cover.style.transition =
+        "clip-path .65s cubic-bezier(.2,.8,.2,1)";
 
-    update(0);
-    opening.classList.remove("dragging");
+    grip.style.transition =
+        "left .65s cubic-bezier(.2,.8,.2,1), transform .3s";
+
+    edge.style.transition = "opacity .3s";
+    rip.style.transition = "opacity .3s";
+
+    render(startPositionDefault());
+
+    seal.classList.remove("dragging");
 
     setTimeout(() => {
         if (opened) return;
-        topPanel.style.transition = "";
-        bottomPanel.style.transition = "";
-        handle.style.transition = "";
-        line.style.transition = "";
-    }, 750);
+
+        cover.style.transition = "";
+        grip.style.transition = "";
+        edge.style.transition = "";
+        rip.style.transition = "";
+    }, 700);
 }
 
-function reveal() {
+function finish() {
     if (opened) return;
 
     opened = true;
     dragging = false;
-    opening.classList.add("releasing");
 
-    topPanel.style.transform = "translateY(-110vh)";
-    bottomPanel.style.transform = "translateY(110vh)";
+    seal.classList.remove("dragging");
+    seal.classList.add("opening");
+
+    cover.style.clipPath = "polygon(100% 0,100% 0,100% 100%,100% 100%)";
 
     setTimeout(() => {
-        opening.classList.add("finished");
-        document.body.style.overflow = "hidden";
+        seal.classList.add("finished");
+        document.body.style.overflow = "auto";
     }, 1050);
 }
 
-handle.addEventListener("pointerdown", e => {
+grip.addEventListener("pointerdown", e => {
     if (opened || dragging) return;
 
     dragging = true;
-    startY = e.clientY;
-    pointerId = e.pointerId;
-    handle.setPointerCapture(pointerId);
-    opening.classList.add("dragging");
+    pointer = e.pointerId;
+
+    startX = e.clientX;
+    startPosition = position;
+
+    grip.setPointerCapture(pointer);
+    seal.classList.add("dragging");
 });
 
-handle.addEventListener("pointermove", e => {
-    if (!dragging || opened || e.pointerId !== pointerId) return;
-    update(e.clientY - startY);
+grip.addEventListener("pointermove", e => {
+    if (!dragging || opened || e.pointerId !== pointer) return;
+
+    const distance = e.clientX - startX;
+
+    render(startPosition + distance);
 });
 
 function release(e) {
     if (!dragging || opened) return;
-    if (e.pointerId !== pointerId) return;
+    if (e.pointerId !== pointer) return;
 
     dragging = false;
-    pointerId = null;
+    pointer = null;
 
-    if (pull >= threshold()) reveal();
-    else reset();
+    if (position >= width() * .72) {
+        finish();
+    } else {
+        reset();
+    }
 }
 
-handle.addEventListener("pointerup", release);
-handle.addEventListener("pointercancel", release);
+grip.addEventListener("pointerup", release);
+grip.addEventListener("pointercancel", release);
+
+window.addEventListener("resize", () => {
+    if (dragging || opened) return;
+    position = startPositionDefault();
+    render(position);
+});
+
+position = startPositionDefault();
+render(position);
 </script>
+
 </body>
 </html>
