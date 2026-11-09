@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>yzycat</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #000;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+}
+
+#intro {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: opacity 1s ease;
+}
+
+#tab {
+    position: absolute;
+    width: 190px;
+    height: 115px;
+    background: #e9e7df;
+    color: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    box-shadow: 0 8px 30px #ffffff12;
+    transform: rotate(-2deg);
+}
+
+#tab:active {
+    cursor: grabbing;
+}
+
+#tab p {
+    font-size: 12px;
+    letter-spacing: 3px;
+    font-weight: bold;
+}
+
+#tab small {
+    position: absolute;
+    bottom: 13px;
+    font-size: 8px;
+    letter-spacing: 2px;
+    opacity: .5;
+}
+
+#tab::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 7px;
+    background: repeating-linear-gradient(
+        90deg,
+        #e9e7df 0px,
+        #e9e7df 7px,
+        transparent 7px,
+        transparent 11px
+    );
+}
+
+#hint {
+    position: absolute;
+    bottom: 80px;
+    color: #555;
+    font-size: 10px;
+    letter-spacing: 4px;
+}
+
+#main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+}
+
+#main h1 {
+    font-size: clamp(40px, 8vw, 100px);
+    font-weight: 400;
+    letter-spacing: -5px;
+}
+
+#main p {
+    color: #666;
+    font-size: 11px;
+    letter-spacing: 4px;
+    margin-top: 15px;
+}
+
+#main nav {
+    display: flex;
+    gap: 30px;
+    margin-top: 55px;
+}
+
+#main nav a {
+    color: #777;
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 2px;
+    transition: color .2s;
+}
+
+#main nav a:hover {
+    color: white;
+}
+
+body.entered {
+    overflow: auto;
+}
+</style>
+</head>
+
+<body>
+
+<div id="intro">
+    <div id="tab">
+        <p>PULL TO ENTER</p>
+        <small>TEAR HERE</small>
+    </div>
+    <div id="hint">DRAG DOWNWARDS</div>
+</div>
+
+<main id="main">
+    <h1>untitled.</h1>
+    <p>WELCOME TO MY WEBSITE.</p>
+
+    <nav>
+        <a href="#">ABOUT</a>
+        <a href="#">WORK</a>
+        <a href="#">CONTACT</a>
+    </nav>
+</main>
+
+<script>
+const tab = document.getElementById("tab");
+const intro = document.getElementById("intro");
+const main = document.getElementById("main");
+
+let startY = 0;
+let currentY = 0;
+let dragging = false;
+let opened = false;
+
+tab.addEventListener("pointerdown", (e) => {
+    if (opened) return;
+
+    dragging = true;
+    startY = e.clientY;
+    currentY = 0;
+
+    tab.setPointerCapture(e.pointerId);
+});
+
+tab.addEventListener("pointermove", (e) => {
+    if (!dragging || opened) return;
+
+    currentY = Math.max(0, e.clientY - startY);
+
+    tab.style.transform =
+        `translateY(${currentY}px) rotate(${currentY * 0.025 - 2}deg)`;
+
+    if (currentY > 80) {
+        tab.style.background = "#d8d5cb";
+    }
+});
+
+function tear() {
+    opened = true;
+    dragging = false;
+
+    tab.style.transition = "transform .35s ease, opacity .35s ease";
+    tab.style.transform = "translateY(500px) rotate(18deg)";
+    tab.style.opacity = "0";
+
+    document.getElementById("hint").style.opacity = "0";
+
+    setTimeout(() => {
+        intro.style.opacity = "0";
+        main.style.opacity = "1";
+        document.body.classList.add("entered");
+    }, 350);
+
+    setTimeout(() => {
+        intro.remove();
+    }, 1400);
+}
+
+tab.addEventListener("pointerup", () => {
+    if (!dragging) return;
+
+    dragging = false;
+
+    if (currentY > 85) {
+        tear();
+    } else {
+        tab.style.transition = "transform .4s ease";
+        tab.style.transform = "rotate(-2deg)";
+        currentY = 0;
+    }
+});
+
+tab.addEventListener("pointercancel", () => {
+    dragging = false;
+    tab.style.transition = "transform .4s ease";
+    tab.style.transform = "rotate(-2deg)";
+    currentY = 0;
+});
+</script>
+
+</body>
+</html>
