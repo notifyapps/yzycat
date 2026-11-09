@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>yzycat</title>
+<title>untitled.</title>
 
 <style>
 * {
@@ -15,112 +15,32 @@
 
 body {
     background: #000;
-    color: white;
+    color: #fff;
     font-family: Arial, sans-serif;
     overflow: hidden;
-    height: 100vh;
 }
 
-#intro {
-    position: fixed;
-    inset: 0;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    transition: opacity 1s ease;
-}
-
-#tab {
-    position: absolute;
-    width: 190px;
-    height: 115px;
-    background: #e9e7df;
-    color: #111;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    cursor: grab;
-    user-select: none;
-    touch-action: none;
-    box-shadow: 0 8px 30px #ffffff12;
-    transform: rotate(-2deg);
-}
-
-#tab:active {
-    cursor: grabbing;
-}
-
-#tab p {
-    font-size: 12px;
-    letter-spacing: 3px;
-    font-weight: bold;
-}
-
-#tab small {
-    position: absolute;
-    bottom: 13px;
-    font-size: 8px;
-    letter-spacing: 2px;
-    opacity: .5;
-}
-
-#tab::after {
-    content: "";
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 100%;
-    height: 7px;
-    background: repeating-linear-gradient(
-        90deg,
-        #e9e7df 0px,
-        #e9e7df 7px,
-        transparent 7px,
-        transparent 11px
-    );
-}
-
-#hint {
-    position: absolute;
-    bottom: 80px;
-    color: #555;
-    font-size: 10px;
-    letter-spacing: 4px;
-}
-
-#main {
+#website {
     min-height: 100vh;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     flex-direction: column;
-    opacity: 0;
-    transition: opacity 1.5s ease;
 }
 
-#main h1 {
-    font-size: clamp(40px, 8vw, 100px);
+#website h1 {
+    font-size: clamp(50px, 9vw, 110px);
     font-weight: 400;
-    letter-spacing: -5px;
+    letter-spacing: -6px;
 }
 
-#main p {
-    color: #666;
-    font-size: 11px;
-    letter-spacing: 4px;
-    margin-top: 15px;
-}
-
-#main nav {
+#website nav {
     display: flex;
-    gap: 30px;
-    margin-top: 55px;
+    gap: 35px;
+    margin-top: 35px;
 }
 
-#main nav a {
+#website a {
     color: #777;
     text-decoration: none;
     font-size: 11px;
@@ -128,29 +48,94 @@ body {
     transition: color .2s;
 }
 
-#main nav a:hover {
+#website a:hover {
     color: white;
 }
 
-body.entered {
-    overflow: auto;
+#opening {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.panel {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: #000;
+    transition: none;
+}
+
+#top {
+    top: 0;
+}
+
+#bottom {
+    bottom: 0;
+}
+
+#pullLine {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: #292929;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+#handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    transform: translate(-50%, -50%);
+    border: 1px solid #444;
+    border-radius: 50%;
+    background: #080808;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    pointer-events: auto;
+    touch-action: none;
+    transition: border-color .2s;
+}
+
+#handle:hover {
+    border-color: #aaa;
+}
+
+#handle:active {
+    cursor: grabbing;
+}
+
+#handle::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    background: #aaa;
+    border-radius: 50%;
+}
+
+#opening.opening {
+    pointer-events: none;
+}
+
+#opening.finished {
+    display: none;
 }
 </style>
 </head>
 
 <body>
 
-<div id="intro">
-    <div id="tab">
-        <p>PULL TO ENTER</p>
-        <small>TEAR HERE</small>
-    </div>
-    <div id="hint">DRAG DOWNWARDS</div>
-</div>
-
-<main id="main">
+<main id="website">
     <h1>untitled.</h1>
-    <p>WELCOME TO MY WEBSITE.</p>
 
     <nav>
         <a href="#">ABOUT</a>
@@ -159,80 +144,118 @@ body.entered {
     </nav>
 </main>
 
-<script>
-const tab = document.getElementById("tab");
-const intro = document.getElementById("intro");
-const main = document.getElementById("main");
+<div id="opening">
+    <div class="panel" id="top"></div>
+    <div class="panel" id="bottom"></div>
 
-let startY = 0;
-let currentY = 0;
+    <div id="pullLine"></div>
+    <div id="handle"></div>
+</div>
+
+<script>
+const opening = document.getElementById("opening");
+const topPanel = document.getElementById("top");
+const bottomPanel = document.getElementById("bottom");
+const line = document.getElementById("pullLine");
+const handle = document.getElementById("handle");
+
 let dragging = false;
+let startY = 0;
+let pull = 0;
 let opened = false;
 
-tab.addEventListener("pointerdown", (e) => {
+const maxPull = window.innerHeight * 0.48;
+const threshold = window.innerHeight * 0.25;
+
+function update(value) {
+    pull = Math.max(0, Math.min(value, maxPull));
+
+    const progress = pull / maxPull;
+
+    topPanel.style.transform =
+        `translateY(${-pull * 0.85}px)`;
+
+    bottomPanel.style.transform =
+        `translateY(${pull * 0.85}px)`;
+
+    line.style.transform =
+        `translateY(${pull}px)`;
+
+    handle.style.top =
+        `calc(50% + ${pull}px)`;
+
+    handle.style.transform =
+        `translate(-50%, -50%) scale(${1 + progress * 0.15})`;
+
+    handle.style.borderColor =
+        progress > 0.5 ? "#aaa" : "#444";
+}
+
+function reset() {
+    topPanel.style.transition = "transform .7s cubic-bezier(.2,.8,.2,1)";
+    bottomPanel.style.transition = "transform .7s cubic-bezier(.2,.8,.2,1)";
+    line.style.transition = "transform .7s ease";
+    handle.style.transition = "top .7s ease, transform .7s ease";
+
+    update(0);
+
+    setTimeout(() => {
+        topPanel.style.transition = "";
+        bottomPanel.style.transition = "";
+        line.style.transition = "";
+        handle.style.transition = "";
+    }, 750);
+}
+
+handle.addEventListener("pointerdown", (e) => {
     if (opened) return;
 
     dragging = true;
     startY = e.clientY;
-    currentY = 0;
-
-    tab.setPointerCapture(e.pointerId);
+    handle.setPointerCapture(e.pointerId);
 });
 
-tab.addEventListener("pointermove", (e) => {
+handle.addEventListener("pointermove", (e) => {
     if (!dragging || opened) return;
 
-    currentY = Math.max(0, e.clientY - startY);
-
-    tab.style.transform =
-        `translateY(${currentY}px) rotate(${currentY * 0.025 - 2}deg)`;
-
-    if (currentY > 80) {
-        tab.style.background = "#d8d5cb";
-    }
+    update(e.clientY - startY);
 });
 
-function tear() {
-    opened = true;
-    dragging = false;
-
-    tab.style.transition = "transform .35s ease, opacity .35s ease";
-    tab.style.transform = "translateY(500px) rotate(18deg)";
-    tab.style.opacity = "0";
-
-    document.getElementById("hint").style.opacity = "0";
-
-    setTimeout(() => {
-        intro.style.opacity = "0";
-        main.style.opacity = "1";
-        document.body.classList.add("entered");
-    }, 350);
-
-    setTimeout(() => {
-        intro.remove();
-    }, 1400);
-}
-
-tab.addEventListener("pointerup", () => {
+function finish() {
     if (!dragging) return;
 
     dragging = false;
 
-    if (currentY > 85) {
-        tear();
-    } else {
-        tab.style.transition = "transform .4s ease";
-        tab.style.transform = "rotate(-2deg)";
-        currentY = 0;
-    }
-});
+    if (pull >= threshold) {
+        opened = true;
+        opening.classList.add("opening");
 
-tab.addEventListener("pointercancel", () => {
-    dragging = false;
-    tab.style.transition = "transform .4s ease";
-    tab.style.transform = "rotate(-2deg)";
-    currentY = 0;
-});
+        topPanel.style.transition =
+            "transform .85s cubic-bezier(.7,0,.2,1)";
+
+        bottomPanel.style.transition =
+            "transform .85s cubic-bezier(.7,0,.2,1)";
+
+        line.style.transition = "opacity .4s ease";
+        handle.style.transition = "opacity .3s ease";
+
+        topPanel.style.transform = "translateY(-110vh)";
+        bottomPanel.style.transform = "translateY(110vh)";
+
+        line.style.opacity = "0";
+        handle.style.opacity = "0";
+
+        setTimeout(() => {
+            opening.classList.add("finished");
+            document.body.style.overflow = "auto";
+        }, 900);
+    } else {
+        reset();
+    }
+}
+
+handle.addEventListener("pointerup", finish);
+handle.addEventListener("pointercancel", finish);
 </script>
 
 </body>
