@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>yzycat.</title>
+
 <style>
 * {
     margin: 0;
@@ -12,32 +13,31 @@
     box-sizing: border-box;
 }
 
-html, body {
-    width: 100%;
-    height: 100%;
-    background: #030303;
+body {
+    background: #000;
     color: white;
     font-family: Arial, sans-serif;
+    height: 100vh;
     overflow: hidden;
 }
 
-#site {
+#website {
     position: fixed;
     inset: 0;
-    background: #030303;
+    background: #000;
 }
 
 .home {
     position: absolute;
-    top: 35px;
+    top: 32px;
     left: 5%;
 }
 
 .home a {
     color: #888;
+    text-decoration: none;
     font-size: 11px;
     letter-spacing: 2px;
-    text-decoration: none;
     transition: color .2s;
 }
 
@@ -45,358 +45,168 @@ html, body {
     color: white;
 }
 
-#seal {
+#intro {
     position: fixed;
     inset: 0;
     z-index: 10;
-    overflow: hidden;
-    touch-action: none;
-    --tear: 0px;
-}
-
-#cover {
-    position: absolute;
-    inset: 0;
-    background:
-        radial-gradient(ellipse at 50% 50%, #090909, #020202 75%);
-    clip-path: polygon(
-        0 0, 100% 0, 100% 100%, 0 100%
-    );
-    will-change: clip-path;
-}
-
-#tear-edge {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 24px;
-    transform: translateX(-50%);
-    pointer-events: none;
-    opacity: 0;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        #fff3,
-        #fff9,
-        #fff2,
-        transparent
-    );
-    filter: blur(5px);
-}
-
-#track {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        #303030 10%,
-        #444 50%,
-        #303030 90%,
-        transparent
-    );
-    transform: translateY(-50%);
-    pointer-events: none;
-}
-
-#grip {
-    position: absolute;
-    top: 50%;
-    left: 12%;
-    width: 62px;
-    height: 42px;
-    transform: translate(-50%, -50%);
-    background: linear-gradient(
-        145deg,
-        #e9e8e2,
-        #aaa99f
-    );
-    border-radius: 3px;
-    box-shadow:
-        0 3px 8px #000,
-        0 0 0 1px #ffffff25,
-        inset 0 1px 1px #ffffffaa,
-        inset 0 -2px 3px #0003;
-    cursor: grab;
-    touch-action: none;
-    user-select: none;
-    z-index: 5;
+    background: #000;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    transition: opacity .8s ease;
 }
 
-#grip:active {
+#slider {
+    position: relative;
+    width: min(320px, 65vw);
+    height: 2px;
+    background: #292929;
+    border-radius: 10px;
+}
+
+#progress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0%;
+    background: #fff;
+    border-radius: 10px;
+}
+
+#handle {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #f2f2f2;
+    transform: translate(-50%, -50%);
+    cursor: grab;
+    touch-action: none;
+    box-shadow: 0 0 15px #ffffff18;
+    transition: box-shadow .2s;
+}
+
+#handle:hover {
+    box-shadow: 0 0 22px #ffffff55;
+}
+
+#handle:active {
     cursor: grabbing;
 }
 
-#grip span {
-    width: 2px;
-    height: 13px;
-    background: #77766e;
-    border-radius: 2px;
-    box-shadow: 1px 0 #fff5;
-}
-
-#grip::before,
-#grip::after {
-    content: "";
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #88877e;
-    top: 50%;
-    transform: translateY(-50%);
-    box-shadow: inset 0 1px 1px #0005;
-}
-
-#grip::before {
-    left: 7px;
-}
-
-#grip::after {
-    right: 7px;
-}
-
-#seal.dragging #grip {
-    background: linear-gradient(145deg, #fff, #c9c8c0);
-    box-shadow:
-        0 5px 15px #000,
-        0 0 20px #ffffff16,
-        inset 0 1px 2px white;
-}
-
-#rip {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 15px;
-    transform: translateY(-50%);
+#intro.done {
+    opacity: 0;
     pointer-events: none;
-    opacity: 0;
-    background: linear-gradient(
-        to bottom,
-        transparent,
-        #ffffff18,
-        transparent
-    );
 }
 
-#seal.opening #cover {
-    transition: clip-path 1s cubic-bezier(.7,0,.2,1);
-}
-
-#seal.opening #grip,
-#seal.opening #track,
-#seal.opening #rip,
-#seal.opening #tear-edge {
-    transition: opacity .3s;
-    opacity: 0;
-}
-
-#seal.finished {
-    display: none;
-}
-
-@media(max-width: 600px) {
+@media (max-width: 600px) {
     .home {
-        top: 25px;
         left: 25px;
-    }
-
-    #grip {
-        width: 56px;
-        height: 40px;
+        top: 25px;
     }
 }
 </style>
 </head>
+
 <body>
 
-<main id="site">
+<main id="website">
     <nav class="home">
         <a href="#">HOME</a>
     </nav>
 </main>
 
-<div id="seal">
-    <div id="cover"></div>
-    <div id="tear-edge"></div>
-    <div id="track"></div>
-    <div id="rip"></div>
-
-    <div id="grip">
-        <span></span>
-        <span></span>
-        <span></span>
+<div id="intro">
+    <div id="slider">
+        <div id="progress"></div>
+        <div id="handle"></div>
     </div>
 </div>
 
 <script>
-const seal = document.getElementById("seal");
-const cover = document.getElementById("cover");
-const grip = document.getElementById("grip");
-const edge = document.getElementById("tear-edge");
-const track = document.getElementById("track");
-const rip = document.getElementById("rip");
+const intro = document.getElementById("intro");
+const slider = document.getElementById("slider");
+const handle = document.getElementById("handle");
+const progress = document.getElementById("progress");
 
 let dragging = false;
-let opened = false;
-let startX = 0;
-let startPosition = 0;
+let completed = false;
+let pointerId = null;
 let position = 0;
-let pointer = null;
 
-const width = () => window.innerWidth;
-const startPositionDefault = () => width() * .12;
+function update(x) {
+    const rect = slider.getBoundingClientRect();
+    const max = rect.width;
 
-function jaggedEdge(x) {
-    const w = width();
-    const points = [];
+    position = Math.max(0, Math.min(x - rect.left, max));
 
-    points.push(`0px 0px`);
-    points.push(`${w}px 0px`);
-    points.push(`${w}px 100%`);
-    points.push(`${x}px 100%`);
+    const percent = position / max * 100;
 
-    const steps = 55;
+    handle.style.left = percent + "%";
+    progress.style.width = percent + "%";
 
-    for (let i = steps; i >= 0; i--) {
-        const y = i / steps;
-        const offset = Math.sin(i * 2.37) * 4 +
-                       Math.sin(i * 4.1) * 2;
-
-        points.push(
-            `${Math.max(0, x + offset)}px ${y * 100}%`
-        );
+    if (percent >= 98) {
+        complete();
     }
-
-    points.push(`0px 0px`);
-
-    return `polygon(${points.join(",")})`;
 }
 
-function render(value) {
-    position = Math.max(
-        startPositionDefault(),
-        Math.min(value, width() * 1.15)
-    );
+function complete() {
+    if (completed) return;
 
-    const progress = Math.min(
-        (position - startPositionDefault()) /
-        (width() - startPositionDefault()),
-        1
-    );
-
-    cover.style.clipPath = jaggedEdge(position);
-
-    grip.style.left = `${position}px`;
-
-    edge.style.left = `${position}px`;
-    edge.style.opacity = progress > 0 ? ".8" : "0";
-
-    rip.style.left = `${position}px`;
-    rip.style.width = `${Math.max(0, position - startPositionDefault())}px`;
-    rip.style.opacity = progress > 0 ? ".7" : "0";
-
-    grip.style.transform =
-        `translate(-50%, -50%) rotate(${progress * 3}deg)`;
-}
-
-function reset() {
-    cover.style.transition =
-        "clip-path .65s cubic-bezier(.2,.8,.2,1)";
-
-    grip.style.transition =
-        "left .65s cubic-bezier(.2,.8,.2,1), transform .3s";
-
-    edge.style.transition = "opacity .3s";
-    rip.style.transition = "opacity .3s";
-
-    render(startPositionDefault());
-
-    seal.classList.remove("dragging");
-
-    setTimeout(() => {
-        if (opened) return;
-
-        cover.style.transition = "";
-        grip.style.transition = "";
-        edge.style.transition = "";
-        rip.style.transition = "";
-    }, 700);
-}
-
-function finish() {
-    if (opened) return;
-
-    opened = true;
+    completed = true;
     dragging = false;
 
-    seal.classList.remove("dragging");
-    seal.classList.add("opening");
+    handle.style.left = "100%";
+    progress.style.width = "100%";
 
-    cover.style.clipPath = "polygon(100% 0,100% 0,100% 100%,100% 100%)";
+    intro.classList.add("done");
 
     setTimeout(() => {
-        seal.classList.add("finished");
+        intro.remove();
         document.body.style.overflow = "auto";
-    }, 1050);
+    }, 850);
 }
 
-grip.addEventListener("pointerdown", e => {
-    if (opened || dragging) return;
+handle.addEventListener("pointerdown", e => {
+    if (completed || dragging) return;
 
     dragging = true;
-    pointer = e.pointerId;
-
-    startX = e.clientX;
-    startPosition = position;
-
-    grip.setPointerCapture(pointer);
-    seal.classList.add("dragging");
+    pointerId = e.pointerId;
+    handle.setPointerCapture(pointerId);
 });
 
-grip.addEventListener("pointermove", e => {
-    if (!dragging || opened || e.pointerId !== pointer) return;
+handle.addEventListener("pointermove", e => {
+    if (!dragging || completed || e.pointerId !== pointerId) return;
 
-    const distance = e.clientX - startX;
-
-    render(startPosition + distance);
+    update(e.clientX);
 });
 
 function release(e) {
-    if (!dragging || opened) return;
-    if (e.pointerId !== pointer) return;
+    if (!dragging || completed || e.pointerId !== pointerId) return;
 
     dragging = false;
-    pointer = null;
+    pointerId = null;
 
-    if (position >= width() * .72) {
-        finish();
-    } else {
-        reset();
+    if (position < slider.clientWidth * .98) {
+        handle.style.transition = "left .35s ease";
+        progress.style.transition = "width .35s ease";
+
+        position = 0;
+        handle.style.left = "0%";
+        progress.style.width = "0%";
+
+        setTimeout(() => {
+            handle.style.transition = "";
+            progress.style.transition = "";
+        }, 400);
     }
 }
 
-grip.addEventListener("pointerup", release);
-grip.addEventListener("pointercancel", release);
-
-window.addEventListener("resize", () => {
-    if (dragging || opened) return;
-    position = startPositionDefault();
-    render(position);
-});
-
-position = startPositionDefault();
-render(position);
+handle.addEventListener("pointerup", release);
+handle.addEventListener("pointercancel", release);
 </script>
 
 </body>
