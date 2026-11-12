@@ -232,41 +232,6 @@ body:not(.landed) .hero h1 span { opacity: 0; }
 .np input[type=range]::-moz-range-track { height: 2px; border-radius: 2px; background: var(--line); }
 .np input[type=range]::-moz-range-progress { height: 2px; border-radius: 2px; background: var(--fg); }
 .np input[type=range]::-moz-range-thumb { width: 8px; height: 8px; border-radius: 50%; background: var(--fg); border: 0; }
-#trackSelect {
-    display: block;
-    width: 100%;
-    min-width: 0;
-    margin-top: 5px;
-    padding: 3px 18px 3px 0;
-    border: 0;
-    outline: 0;
-    color: var(--mute);
-    background: transparent;
-    font: 10px var(--font);
-    text-overflow: ellipsis;
-    cursor: pointer;
-}
-#trackSelect option { color: #f2f2f2; background: #090909; }
-.trackNav {
-    flex: none;
-    width: 25px;
-    height: 36px;
-    border: 0;
-    color: var(--mute);
-    background: transparent;
-    font: 24px/1 Arial, sans-serif;
-    cursor: pointer;
-    transition: color .2s ease, opacity .2s ease;
-}
-.trackNav:hover, .trackNav[aria-pressed="true"] { color: var(--fg); }
-.trackNav:disabled { opacity: .25; cursor: default; }
-@media (max-width: 430px) {
-    .np { gap: 8px; padding-right: 9px; }
-    .np .art { width: 48px; height: 48px; }
-    .trackNav { width: 20px; }
-    #npPlay { width: 36px; height: 36px; }
-}
-
 #npPlay {
     flex: none;
     width: 42px;
@@ -437,15 +402,11 @@ body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
                 <div class="a" id="npArtist"></div>
                 <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek">
                 <div class="time" aria-hidden="true"><span id="tCur">0:00</span><span id="tDur">0:00</span></div>
-                <select id="trackSelect" aria-label="Choose a song"><option value="">loading songs...</option></select>
             </div>
-            <button class="trackNav" id="npPrev" type="button" aria-label="Previous song">‹</button>
             <button id="npPlay" type="button" aria-label="Play or pause">
                 <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
                 <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
             </button>
-            <button class="trackNav" id="npNext" type="button" aria-label="Next song">›</button>
-            <button class="trackNav" id="npShuffle" type="button" aria-label="Toggle shuffle" aria-pressed="false">⤨</button>
         </aside>
     </div>
 </main>
@@ -893,8 +854,6 @@ async function readTags(url) {
 const AUDIO_EXTENSIONS = /\.(mp3|m4a|aac|ogg|oga|wav|flac|opus)(?:[?#].*)?$/i;
 let playlist = [];
 let currentTrack = -1;
-let shuffleEnabled = false;
-const trackSelect = document.getElementById("trackSelect");
 
 function cleanTrackName(path) {
     return decodeURIComponent(path.split("/").pop() || "")
@@ -937,26 +896,17 @@ async function loadPlaylist() {
         tracks = [{ src: "yzymusic/7-Donda-PABLO-FKYBJQ.mp3", title: "7 Donda PABLO FKYBJQ", artist: "" }];
     }
     playlist = tracks;
-    trackSelect.innerHTML = "";
-    playlist.forEach((track, index) => {
-        const option = document.createElement("option");
-        option.value = String(index);
-        option.textContent = track.title;
-        trackSelect.appendChild(option);
-    });
-    const first = playlist.length > 1 ? Math.floor(Math.random() * playlist.length) : 0;
+    const first = Math.floor(Math.random() * playlist.length);
     await loadTrack(first, false);
 }
 
-async function loadTrack(index, autoplay = true) {
+async function loadTrack(index, autoplay = false) {
     if (!playlist.length) return;
     currentTrack = (index + playlist.length) % playlist.length;
     const track = playlist[currentTrack];
-    const wasPlaying = !music.paused;
-    if (wasPlaying) music.pause();
+    music.pause();
     music.src = track.src;
     music.load();
-    trackSelect.value = String(currentTrack);
     npTitle.textContent = track.title || cleanTrackName(track.src);
     npArtist.textContent = track.artist || "";
     artImg.hidden = true;
@@ -966,21 +916,14 @@ async function loadTrack(index, autoplay = true) {
         const tags = await readTags(track.src);
         if (currentTrack === index) showCard({ ...tags, title: tags.title || track.title, artist: tags.artist || track.artist });
     } catch (e) { showCard({ title: track.title, artist: track.artist }); }
-    if (autoplay || wasPlaying) playMusic(900).catch(() => {});
+    if (autoplay) playMusic(900).catch(() => {});
 }
 
-function nextTrack() {
+function playNextAutomatically() {
     if (playlist.length < 2) return;
-    let next = currentTrack;
-    if (shuffleEnabled) {
-        while (next === currentTrack) next = Math.floor(Math.random() * playlist.length);
-    } else next = (currentTrack + 1) % playlist.length;
+    let next = Math.floor(Math.random() * playlist.length);
+    while (next === currentTrack) next = Math.floor(Math.random() * playlist.length);
     loadTrack(next, true);
-}
-
-function previousTrack() {
-    if (music.currentTime > 3) { music.currentTime = 0; return; }
-    loadTrack((currentTrack - 1 + playlist.length) % playlist.length, true);
 }
 
 const np = document.getElementById("np");
@@ -1052,19 +995,11 @@ function showCard(tags) {
             });
             navigator.mediaSession.setActionHandler("play", () => { if (music.paused) toggleMusic(); });
             navigator.mediaSession.setActionHandler("pause", () => { if (!music.paused) toggleMusic(); });
-            navigator.mediaSession.setActionHandler("seekto", d => { if (d && isFinite(d.seekTime)) music.currentTime = d.seekTime; });
         } catch (e) {}
     }
 }
 
-document.getElementById("npNext").addEventListener("click", nextTrack);
-document.getElementById("npPrev").addEventListener("click", previousTrack);
-document.getElementById("npShuffle").addEventListener("click", event => {
-    shuffleEnabled = !shuffleEnabled;
-    event.currentTarget.setAttribute("aria-pressed", String(shuffleEnabled));
-});
-trackSelect.addEventListener("change", () => loadTrack(Number(trackSelect.value), !music.paused));
-music.addEventListener("ended", nextTrack);
+music.addEventListener("ended", playNextAutomatically);
 loadPlaylist();
 </script>
 
