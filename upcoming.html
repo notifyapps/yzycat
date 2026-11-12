@@ -583,6 +583,8 @@ seek.addEventListener("change", () => {
 });
 
 const MUSIC_DIR = "yzyupcomingmusic/";
+const CARD_TITLE = "everything.";
+const CARD_ARTIST = "ye";
 let files = [], tracks = [], cur = -1;
 
 function fallbackTitle(f) {
@@ -625,8 +627,8 @@ function resetAccent() {
 
 function applyCard() {
     const t = tracks[cur] || { title: "coming soon", artist: "" };
-    npTitle.textContent = t.title;
-    npArtist.textContent = t.artist || "";
+    npTitle.textContent = CARD_TITLE;
+    npArtist.textContent = CARD_ARTIST;
     if (t.picture && t.picture.data.length) {
         if (!t.artUrl) t.artUrl = URL.createObjectURL(new Blob([t.picture.data], { type: t.picture.mime }));
         artImg.onload = () => { artImg.hidden = false; artFallback.hidden = true; accentFrom(artImg); };
@@ -640,9 +642,9 @@ function applyCard() {
     if ("mediaSession" in navigator && window.MediaMetadata) {
         try {
             navigator.mediaSession.metadata = new MediaMetadata({
-                title: t.title,
-                artist: t.artist || "",
-                album: t.album || "",
+                title: CARD_TITLE,
+                artist: CARD_ARTIST,
+                album: "",
                 artwork: t.artUrl ? [{ src: t.artUrl, sizes: "512x512", type: t.picture.mime }] : []
             });
             navigator.mediaSession.setActionHandler("play", () => { if (music.paused) toggleMusic(); });
