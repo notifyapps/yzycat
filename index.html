@@ -105,7 +105,7 @@ nav a[aria-current]::after { transform: scaleX(1); }
 }
 .hero h1 {
     font-weight: 800;
-    font-size: clamp(56px, min(19vw, 34vh), 280px);
+    font-size: clamp(44px, min(13vw, 24vh), 200px);
     line-height: .85;
     letter-spacing: -.045em;
     margin-left: -.04em;
@@ -116,6 +116,24 @@ nav a[aria-current]::after { transform: scaleX(1); }
     transition: transform .4s cubic-bezier(.2, .8, .2, 1);
 }
 body:not(.landed) .hero h1 span { opacity: 0; }
+
+.stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    padding: 24px 0;
+}
+.quote {
+    max-width: min(900px, 100%);
+    font-weight: 500;
+    font-size: clamp(24px, 4.4vw, 56px);
+    line-height: 1.08;
+    letter-spacing: -.03em;
+    color: var(--fg);
+    overflow-wrap: anywhere;
+}
+.stage:empty, .quote:empty { display: none; }
 
 .np {
     display: flex;
@@ -220,12 +238,13 @@ body:not(.landed) .hero h1 span { opacity: 0; }
 .np.playing #npPlay .i-pause { display: block; }
 .np.playing #npPlay .i-play { display: none; }
 
-.top, .np {
+.top, .np, .stage {
     opacity: 0;
     transform: translateY(10px);
     transition: opacity .9s ease .1s, transform .9s ease .1s;
 }
-body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
+body.landed .top, body.landed .np.ready, body.landed .stage { opacity: 1; transform: none; }
+body.landed .stage { transition-delay: .3s; }
 
 #intro {
     position: fixed;
@@ -327,7 +346,7 @@ body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
     nav { font-size: 15px; }
 }
 @media (prefers-reduced-motion: reduce) {
-    #veil, #mark, .top, .np, #gate { transition: none !important; }
+    #veil, #mark, .top, .np, .stage, #gate { transition: none !important; }
     #label, .np.playing .eq i { animation: none !important; }
 }
 </style>
@@ -345,6 +364,8 @@ body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
             <a href="#">contact</a>
         </nav>
     </div>
+
+    <div class="stage"><p class="quote" id="quote"></p></div>
 
     <div class="bottom">
         <header class="hero">
@@ -567,6 +588,34 @@ site.addEventListener("pointermove", moveSpot);
 site.addEventListener("pointerdown", moveSpot);
 
 render(0);
+
+const QUOTES = [
+  "i am a god.",
+  "hurry up with my damn croissants.",
+  "name one genius that ain't crazy.",
+  "can we get much higher?",
+  "i'm living in the future.",
+  "i feel like pablo.",
+  "wake up, mr. west!",
+  "how much do i not give a fuck?",
+  "i miss the old kanye.",
+  "i'm nice at ping pong.",
+  "poopity scoop.",
+  "i'm a champion.",
+  "you can't tell me nothing.",
+  "everything i'm not made me everything i am.",
+  "no one man should have all that power."
+];
+(function pickQuote() {
+    const el = document.getElementById("quote");
+    if (!QUOTES.length) return;
+    let last = -1;
+    try { last = parseInt(localStorage.getItem("yzycat-quote"), 10); } catch (e) {}
+    let i = Math.floor(Math.random() * QUOTES.length);
+    if (QUOTES.length > 1 && i === last) i = (i + 1 + Math.floor(Math.random() * (QUOTES.length - 1))) % QUOTES.length;
+    el.textContent = QUOTES[i];
+    try { localStorage.setItem("yzycat-quote", String(i)); } catch (e) {}
+})();
 
 function syncsafe(b, o) { return ((b[o] & 127) << 21) | ((b[o + 1] & 127) << 14) | ((b[o + 2] & 127) << 7) | (b[o + 3] & 127); }
 
