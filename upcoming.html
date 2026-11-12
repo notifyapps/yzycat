@@ -364,22 +364,85 @@ const music = document.getElementById("music");
 
 const VOLUME = 0.6;
 let completed = true;
-let wantsSound = true, fadeTimer = null, resumeOnShow = false;
+let wantsSound = true, fadeTimer = null;
 
 try { if (localStorage.getItem("yzycat-sound") === "off") wantsSound = false; } catch (e) {}
 
+let actx = null, lowpass = null, duck = null, master = null;
+let graph = false, graphTried = false, muffle = 0, awayTimer = null;
+const CUTOFF = [20000, 900, 240];
+const DUCK = [1, 0.8, 0.55];
+
+function ensureGraph() {
+    if (graph) {
+        if (actx.state === "suspended") actx.resume().catch(() => {});
+        return;
+    }
+    if (graphTried) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ua = navigator.userActivation;
+    if (!AC || !ua || !ua.hasBeenActive) return;
+    graphTried = true;
+    try {
+        actx = new AC();
+        const source = actx.createMediaElementSource(music);
+        lowpass = actx.createBiquadFilter();
+        lowpass.type = "lowpass";
+        lowpass.frequency.value = CUTOFF[muffle];
+        lowpass.Q.value = 0.8;
+        duck = actx.createGain();
+        duck.gain.value = DUCK[muffle];
+        master = actx.createGain();
+        master.gain.value = music.volume;
+        source.connect(lowpass);
+        lowpass.connect(duck);
+        duck.connect(master);
+        master.connect(actx.destination);
+        music.volume = 1;
+        graph = true;
+        if (actx.state === "suspended") actx.resume().catch(() => {});
+    } catch (e) {
+        graph = false;
+    }
+}
+
+["pointerup", "touchend", "keydown", "click"].forEach(ev => document.addEventListener(ev, ensureGraph, true));
+
+function getLevel() { return graph ? master.gain.value : music.volume; }
+function setLevel(v) {
+    v = Math.max(0, Math.min(1, v));
+    if (graph) master.gain.value = v;
+    else music.volume = v;
+}
+
+function applyMuffle(level, ms) {
+    muffle = level;
+    if (graph) {
+        const t = actx.currentTime, d = ms / 1000;
+        lowpass.frequency.cancelScheduledValues(t);
+        lowpass.frequency.setValueAtTime(Math.max(60, lowpass.frequency.value), t);
+        lowpass.frequency.exponentialRampToValueAtTime(CUTOFF[level], t + d);
+        duck.gain.cancelScheduledValues(t);
+        duck.gain.setValueAtTime(duck.gain.value, t);
+        duck.gain.linearRampToValueAtTime(DUCK[level], t + d);
+    } else {
+        fadeTo(VOLUME * (level === 0 ? 1 : level === 1 ? 0.5 : 0.25), ms);
+    }
+}
+
 function fadeTo(target, ms, done) {
     clearInterval(fadeTimer);
-    const start = music.volume, t0 = performance.now();
+    const start = getLevel(), t0 = performance.now();
     fadeTimer = setInterval(() => {
         const k = Math.min(1, (performance.now() - t0) / ms);
-        music.volume = Math.max(0, Math.min(1, start + (target - start) * k));
+        setLevel(start + (target - start) * k);
         if (k >= 1) { clearInterval(fadeTimer); if (done) done(); }
     }, 30);
 }
 
 function playMusic(ms) {
-    music.volume = 0;
+    ensureGraph();
+    setLevel(0);
     const p = music.play();
     return (p && p.then ? p : Promise.resolve()).then(() => fadeTo(VOLUME, ms || 1200));
 }
@@ -411,14 +474,25 @@ function startMusic() {
     });
 }
 
+function goAway() {
+    if (music.paused) return;
+    applyMuffle(1, 600);
+    clearTimeout(awayTimer);
+    awayTimer = setTimeout(() => {
+        if (document.hidden && !music.paused) applyMuffle(2, 1500);
+    }, 6000);
+}
+
+function comeBack() {
+    clearTimeout(awayTimer);
+    applyMuffle(0, 500);
+    if (wantsSound && music.paused && completed) music.play().catch(() => {});
+}
+
 document.addEventListener("visibilitychange", () => {
     if (!completed) return;
-    if (document.hidden) {
-        if (!music.paused) { resumeOnShow = true; music.pause(); }
-    } else if (resumeOnShow) {
-        resumeOnShow = false;
-        music.play().catch(() => {});
-    }
+    if (document.hidden) goAway();
+    else comeBack();
 });
 
 function moveSpot(e) {
@@ -672,7 +746,8 @@ function go(i, play) {
     if (play) {
         wantsSound = true;
         try { localStorage.setItem("yzycat-sound", "on"); } catch (e) {}
-        music.volume = VOLUME;
+        ensureGraph();
+        setLevel(VOLUME);
         music.play().catch(() => {});
     }
 }
