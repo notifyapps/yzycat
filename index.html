@@ -23,11 +23,7 @@
     --line: #292929;
     --font: "Syne", "Helvetica Neue", Arial, sans-serif;
     --ease: cubic-bezier(.65, 0, .25, 1);
-    --mx: 50%;
-    --my: 50%;
     --pad: 5vw;
-    --accent: 255, 255, 255;
-    --spot-a: .08;
     color-scheme: dark;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -71,25 +67,23 @@ body::after {
         max(var(--pad), env(safe-area-inset-right, 0px))
         max(28px, env(safe-area-inset-bottom, 0px))
         max(var(--pad), env(safe-area-inset-left, 0px));
-    background:
-        radial-gradient(520px circle at var(--mx) var(--my), rgba(var(--accent), var(--spot-a)), transparent 70%),
-        var(--bg);
+    background: var(--bg);
 }
 
 .top { display: flex; align-items: center; }
-nav { display: flex; gap: 6px; font-size: 13px; letter-spacing: .04em; }
+nav { display: flex; gap: 10px; font-size: 12px; letter-spacing: .08em; text-transform: lowercase; }
 nav a {
     color: var(--mute);
     text-decoration: none;
     position: relative;
-    padding: 12px 11px;
-    margin: -12px 0 -12px -11px;
-    transition: color .2s;
+    padding: 12px 10px;
+    margin: -12px 0 -12px -10px;
+    transition: color .2s ease;
 }
 nav a::after {
     content: "";
     position: absolute;
-    left: 11px; right: 11px; bottom: 8px;
+    left: 10px; right: 10px; bottom: 8px;
     height: 1px;
     background: var(--fg);
     transform: scaleX(0);
@@ -144,7 +138,7 @@ body:not(.landed) .hero h1 span { opacity: 0; }
     margin-bottom: 18px;
 }
 .quote:empty { display: none; }
-.quote { cursor: pointer; }
+.quote { cursor: pointer; user-select: text; -webkit-user-select: text; }
 .quote span {
     display: inline-block;
     opacity: 0;
@@ -162,12 +156,10 @@ body:not(.landed) .hero h1 span { opacity: 0; }
     width: min(340px, 100%);
     flex: none;
     padding: 10px 14px 10px 10px;
-    border-radius: 18px;
-    background: rgba(14, 14, 14, .72);
-    border: 1px solid #ffffff14;
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    box-shadow: 0 0 48px rgba(var(--accent), .07);
+    border-radius: 12px;
+    background: #090909;
+    border: 1px solid #242424;
+    box-shadow: none;
 }
 .np .art {
     position: relative;
@@ -176,7 +168,7 @@ body:not(.landed) .hero h1 span { opacity: 0; }
     flex: none;
     border-radius: 11px;
     overflow: hidden;
-    background: linear-gradient(135deg, #1a1a1a, #0b0b0b);
+    background: #151515;
     display: grid;
     place-items: center;
     color: var(--mute);
@@ -251,7 +243,7 @@ body:not(.landed) .hero h1 span { opacity: 0; }
     display: grid;
     place-items: center;
     cursor: pointer;
-    transition: transform .2s ease;
+    transition: background .2s ease, color .2s ease, transform .2s ease;
 }
 #npPlay:active { transform: scale(.94); }
 #npPlay svg { width: 16px; height: 16px; fill: currentColor; grid-area: 1 / 1; }
@@ -340,7 +332,7 @@ body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
     place-items: center;
     cursor: grab;
     touch-action: none;
-    box-shadow: 0 0 18px #ffffff1a;
+    box-shadow: none;
 }
 #handle:active { cursor: grabbing; }
 #handle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
@@ -348,7 +340,8 @@ body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
 @media (hover: hover) {
     nav a:hover { color: var(--fg); }
     nav a:hover::after { transform: scaleX(1); }
-    .hero h1 span:hover { transform: translateY(-.06em); }
+    .hero h1 span:hover { transform: translateY(-.035em); }
+    #npPlay:hover { background: #d8d8d8; }
 }
 @media (max-width: 700px) {
     :root { --pad: 6vw; }
@@ -356,7 +349,14 @@ body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
     .np { order: -1; width: 100%; }
 }
 @media (max-width: 420px) {
-    nav { font-size: 12px; }
+    nav { font-size: 11px; gap: 7px; }
+    .np { gap: 10px; padding: 9px; }
+    .np .art { width: 54px; height: 54px; }
+}
+@media (max-height: 620px) and (min-width: 701px) {
+    #website { padding-top: 22px; padding-bottom: 22px; }
+    .stage { margin: 8px 0 12px; }
+    .hero h1 { font-size: clamp(42px, 12vh, 120px); }
 }
 @media (max-height: 480px) and (orientation: landscape) {
     #intro { gap: 32px; }
@@ -601,13 +601,6 @@ handle.addEventListener("keydown", e => {
     if (pct >= 92) complete();
 });
 
-function moveSpot(e) {
-    site.style.setProperty("--mx", e.clientX + "px");
-    site.style.setProperty("--my", e.clientY + "px");
-}
-site.addEventListener("pointermove", moveSpot);
-site.addEventListener("pointerdown", moveSpot);
-
 render(0);
 
 const QUOTES = [
@@ -828,30 +821,6 @@ function fallbackTitle() {
     return f.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim();
 }
 
-function accentFrom(img) {
-    try {
-        const c = document.createElement("canvas");
-        c.width = c.height = 24;
-        const x = c.getContext("2d", { willReadFrequently: true });
-        x.drawImage(img, 0, 0, 24, 24);
-        const d = x.getImageData(0, 0, 24, 24).data;
-        let r = 0, g = 0, b = 0, w = 0;
-        for (let i = 0; i < d.length; i += 4) {
-            const max = Math.max(d[i], d[i + 1], d[i + 2]), min = Math.min(d[i], d[i + 1], d[i + 2]);
-            const sat = max ? (max - min) / max : 0;
-            const wt = sat * sat * (max / 255) + 0.001;
-            r += d[i] * wt; g += d[i + 1] * wt; b += d[i + 2] * wt; w += wt;
-        }
-        r /= w; g /= w; b /= w;
-        const m = Math.max(r, g, b);
-        if (m < 40) return;
-        const k = 220 / m;
-        const root = document.documentElement.style;
-        root.setProperty("--accent", Math.min(255, Math.round(r * k)) + ", " + Math.min(255, Math.round(g * k)) + ", " + Math.min(255, Math.round(b * k)));
-        root.setProperty("--spot-a", ".15");
-    } catch (e) {}
-}
-
 function showCard(tags) {
     npTitle.textContent = tags.title || fallbackTitle();
     npArtist.textContent = tags.artist || "";
@@ -859,7 +828,7 @@ function showCard(tags) {
     if (tags.picture && tags.picture.data.length) {
         artType = tags.picture.mime;
         artUrl = URL.createObjectURL(new Blob([tags.picture.data], { type: artType }));
-        artImg.onload = () => { artImg.hidden = false; artFallback.hidden = true; accentFrom(artImg); };
+        artImg.onload = () => { artImg.hidden = false; artFallback.hidden = true; };
         artImg.src = artUrl;
     }
     np.classList.add("ready");
