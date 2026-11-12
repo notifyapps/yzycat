@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>upcoming · yzycat</title>
-<meta name="description" content="yzycat upcoming">
+<title>upcoming</title>
+<meta name="description" content="upcoming">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta property="og:title" content="upcoming · yzycat">
+<meta property="og:title" content="upcoming">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='black'/><text x='50' y='68' font-size='58' font-family='Arial' font-weight='800' text-anchor='middle' fill='white'>y</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -754,14 +754,62 @@ document.getElementById("prev").addEventListener("click", () => {
 document.getElementById("next").addEventListener("click", () => { if (files.length) go((cur + 1) % files.length, true); });
 music.addEventListener("ended", () => { if (files.length) go((cur + 1) % files.length, true); });
 
-async function loadPlaylist() {
-    try {
-        const r = await fetch(MUSIC_DIR + "files.json", { cache: "no-cache" });
-        const list = r.ok ? await r.json() : [];
-        files = Array.isArray(list) ? list.filter(n => typeof n === "string" && n.trim()).map(n => n.split("/").pop()) : [];
-    } catch (e) {
-        files = [];
+const REPO = "notifyapps/yzycat";
+const AUDIO_RE = /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|webm)$/i;
+const LIST_KEY = "yzycat-upcoming-list";
+
+function cleanNames(list) {
+    return (Array.isArray(list) ? list : [])
+        .filter(n => typeof n === "string" && AUDIO_RE.test(n))
+        .map(n => n.split("/").pop());
+}
+
+function sortNames(list) {
+    return list.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+}
+
+async function fromGithub() {
+    const r = await fetch("https://api.github.com/repos/" + REPO + "/contents/" + MUSIC_DIR.replace(/\/$/, ""), {
+        headers: { Accept: "application/vnd.github+json" }
+    });
+    if (!r.ok) throw new Error("api");
+    const items = await r.json();
+    return sortNames(cleanNames(items.filter(i => i.type === "file").map(i => i.name)));
+}
+
+async function fromManifest() {
+    const r = await fetch(MUSIC_DIR + "files.json", { cache: "no-cache" });
+    if (!r.ok) throw new Error("manifest");
+    return cleanNames(await r.json());
+}
+
+async function fromListing() {
+    const r = await fetch(MUSIC_DIR, { cache: "no-cache" });
+    if (!r.ok) throw new Error("listing");
+    const html = await r.text();
+    const out = [];
+    html.replace(/href="([^"#?]+)"/g, (m, h) => {
+        try { out.push(decodeURIComponent(h.split("/").pop())); } catch (e) {}
+        return m;
+    });
+    return sortNames(cleanNames(out));
+}
+
+async function discoverFiles() {
+    for (const source of [fromGithub, fromManifest, fromListing]) {
+        try {
+            const list = await source();
+            if (list.length) {
+                try { localStorage.setItem(LIST_KEY, JSON.stringify(list)); } catch (e) {}
+                return list;
+            }
+        } catch (e) {}
     }
+    try { return cleanNames(JSON.parse(localStorage.getItem(LIST_KEY) || "[]")); } catch (e) { return []; }
+}
+
+async function loadPlaylist() {
+    files = await discoverFiles();
     tracks = files.map(f => ({ file: f, title: fallbackTitle(f), artist: "" }));
     if (files.length) select(0);
     else { renderTracks(); applyCard(); }
