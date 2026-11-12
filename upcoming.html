@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>upcoming</title>
-<meta name="description" content="upcoming">
+<title>coming soon</title>
+<meta name="description" content="coming soon">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta property="og:title" content="upcoming">
+<meta property="og:title" content="coming soon">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='black'/><text x='50' y='68' font-size='58' font-family='Arial' font-weight='800' text-anchor='middle' fill='white'>y</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -133,7 +133,10 @@ body:not(.landed) .hero h1 span { opacity: 0; }
     color: var(--mute);
     margin-bottom: 14px;
     flex: none;
+    opacity: 0;
+    transition: opacity 1.4s ease .5s;
 }
+body.landed .eyebrow { opacity: 1; }
 .eyebrow::before {
     content: "";
     display: block;
@@ -142,41 +145,6 @@ body:not(.landed) .hero h1 span { opacity: 0; }
     background: var(--mute);
     margin-bottom: 18px;
 }
-.tracks {
-    list-style: none;
-    overflow-y: auto;
-    scrollbar-width: none;
-    min-height: 0;
-}
-.tracks::-webkit-scrollbar { display: none; }
-.tracks li {
-    opacity: 0;
-    transition: opacity 1.4s ease;
-    transition-delay: calc(.5s + var(--i, 0) * 60ms);
-}
-.tracks.in li { opacity: 1; }
-.row {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 2.4em 1fr auto;
-    align-items: baseline;
-    gap: 8px;
-    padding: 12px 0;
-    background: none;
-    border: 0;
-    border-bottom: 1px solid #ffffff0d;
-    color: var(--mute);
-    font: inherit;
-    font-size: 15px;
-    letter-spacing: -.005em;
-    text-align: left;
-    cursor: pointer;
-    transition: color .4s ease;
-}
-.row .n { font-size: 11px; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
-.row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row .ar { font-size: 12px; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row.on { color: var(--fg); }
 .ctl { display: flex; align-items: center; gap: 4px; flex: none; }
 .skip {
     width: 30px;
@@ -313,7 +281,6 @@ body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
     nav a:hover { color: var(--fg); }
     nav a:hover::after { transform: scaleX(1); }
     .skip:hover { color: var(--fg); }
-    .row:hover { color: var(--fg); }
 }
 @media (max-width: 700px) {
     :root { --pad: 6vw; }
@@ -332,7 +299,7 @@ body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
     nav { font-size: 15px; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .top, .np, .tracks li, .hero h1 span { transition: none !important; }
+    .top, .np, .eyebrow, .hero h1 span { transition: none !important; }
     .np.playing .eq i { animation: none !important; }
 }
 </style>
@@ -346,15 +313,14 @@ body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
     <div class="top">
         <nav aria-label="Main">
             <a href="index.html">home</a>
-            <a href="upcoming.html" aria-current="page">upcoming</a>
+            <a href="upcoming.html" aria-current="page">coming soon</a>
             <a href="#">contact</a>
         </nav>
     </div>
 
     <div class="stage">
         <div class="listwrap">
-            <p class="eyebrow">upcoming</p>
-            <ol class="tracks" id="tracks"></ol>
+            <p class="eyebrow">coming soon</p>
         </div>
     </div>
 
@@ -464,7 +430,6 @@ site.addEventListener("pointerdown", moveSpot);
 
 requestAnimationFrame(() => requestAnimationFrame(() => {
     document.body.classList.add("landed");
-    document.getElementById("tracks").classList.add("in");
 }));
 
 document.addEventListener("keydown", e => {
@@ -618,7 +583,6 @@ seek.addEventListener("change", () => {
 });
 
 const MUSIC_DIR = "yzyupcomingmusic/";
-const tracksEl = document.getElementById("tracks");
 let files = [], tracks = [], cur = -1;
 
 function fallbackTitle(f) {
@@ -659,40 +623,6 @@ function resetAccent() {
     root.setProperty("--spot-a", ".06");
 }
 
-function renderTracks() {
-    tracksEl.textContent = "";
-    if (!tracks.length) {
-        const li = document.createElement("li");
-        li.style.setProperty("--i", 0);
-        const b = document.createElement("div");
-        b.className = "row";
-        b.textContent = "nothing here yet";
-        li.appendChild(b);
-        tracksEl.appendChild(li);
-        return;
-    }
-    tracks.forEach((t, i) => {
-        const li = document.createElement("li");
-        li.style.setProperty("--i", i);
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "row" + (i === cur ? " on" : "");
-        const n = document.createElement("span");
-        n.className = "n";
-        n.textContent = String(i + 1).padStart(2, "0");
-        const nm = document.createElement("span");
-        nm.className = "nm";
-        nm.textContent = t.title;
-        const ar = document.createElement("span");
-        ar.className = "ar";
-        ar.textContent = t.artist || "";
-        b.append(n, nm, ar);
-        b.addEventListener("click", () => go(i, true));
-        li.appendChild(b);
-        tracksEl.appendChild(li);
-    });
-}
-
 function applyCard() {
     const t = tracks[cur] || { title: "coming soon", artist: "" };
     npTitle.textContent = t.title;
@@ -731,7 +661,6 @@ function select(i) {
     seek.style.setProperty("--p", "0%");
     tCur.textContent = "0:00";
     tDur.textContent = "0:00";
-    renderTracks();
     applyCard();
 }
 
@@ -812,14 +741,13 @@ async function loadPlaylist() {
     files = await discoverFiles();
     tracks = files.map(f => ({ file: f, title: fallbackTitle(f), artist: "" }));
     if (files.length) select(0);
-    else { renderTracks(); applyCard(); }
+    else applyCard();
     files.forEach((f, i) => {
         readTags(trackSrc(i)).then(t => {
             tracks[i].title = t.title || tracks[i].title;
             tracks[i].artist = t.artist || "";
             tracks[i].album = t.album || "";
             tracks[i].picture = t.picture || null;
-            renderTracks();
             if (i === cur) applyCard();
         }).catch(() => {});
     });
