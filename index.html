@@ -937,13 +937,13 @@ function normalizePlaylist(data) {
     return entries.map(item => {
         const file = typeof item === "string" ? item : item && (item.file || item.src || item.path);
         if (!file || !AUDIO_EXTENSIONS.test(file)) return null;
-        const src = file.startsWith("/") || /^https?:\/\//i.test(file) ? file : "yzymusic/" + file.replace(/^\.\//, "");
+        const src = file.startsWith("/") || /^https?:\/\//i.test(file) ? file : "yzymusic2/" + file.replace(/^\.\//, "");
         return { src, title: (typeof item === "object" && item.title) || cleanTrackName(file), artist: (typeof item === "object" && item.artist) || "" };
     }).filter(Boolean);
 }
 
 async function discoverFromDirectory() {
-    const response = await fetch("yzymusic/", { cache: "no-store" });
+    const response = await fetch("yzymusic2/", { cache: "no-store" });
     if (!response.ok) throw new Error("Directory listing unavailable");
     const html = await response.text();
     const doc = new DOMParser().parseFromString(html, "text/html");
@@ -956,7 +956,7 @@ async function discoverFromDirectory() {
 async function loadPlaylist() {
     let tracks = [];
     try {
-        const response = await fetch("yzymusic/songs.json", { cache: "no-store" });
+        const response = await fetch("yzymusic2/songs.json", { cache: "no-store" });
         if (response.ok) tracks = normalizePlaylist(await response.json());
     } catch (e) {}
     try {
@@ -965,7 +965,7 @@ async function loadPlaylist() {
         discovered.forEach(track => { if (!known.has(track.src)) tracks.push(track); });
     } catch (e) {}
     if (!tracks.length) {
-        tracks = [{ src: "yzymusic/7-Donda-PABLO-FKYBJQ.mp3", title: "7 Donda PABLO FKYBJQ", artist: "" }];
+        tracks = [{ src: "yzymusic2/06 Moonlight Interlude.mp3", title: "06 Moonlight Interlude.mp3", artist: "" }];
     }
     playlist = tracks;
     const first = Math.floor(Math.random() * playlist.length);
