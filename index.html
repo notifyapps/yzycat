@@ -123,16 +123,23 @@ body:not(.landed) .hero h1 span { opacity: 0; }
     display: flex;
     align-items: center;
     margin: 18px 0 22px;
-    overflow: hidden;
 }
 .quote {
-    width: 100%;
-    font-weight: 800;
-    font-size: 64px;
-    line-height: .9;
-    letter-spacing: -.045em;
+    max-width: 24ch;
+    font-weight: 500;
+    font-size: clamp(20px, 2.6vw, 34px);
+    line-height: 1.2;
+    letter-spacing: -.02em;
     color: var(--fg);
     text-wrap: balance;
+}
+.quote::before {
+    content: "";
+    display: block;
+    width: 28px;
+    height: 1px;
+    background: var(--mute);
+    margin-bottom: 18px;
 }
 .quote:empty { display: none; }
 
@@ -591,21 +598,6 @@ site.addEventListener("pointerdown", moveSpot);
 render(0);
 
 const QUOTES = [
-  "i am a god.",
-  "hurry up with my damn croissants.",
-  "name one genius that ain't crazy.",
-  "can we get much higher?",
-  "i'm living in the future.",
-  "i feel like pablo.",
-  "wake up, mr. west!",
-  "how much do i not give a fuck?",
-  "i miss the old kanye.",
-  "i'm nice at ping pong.",
-  "poopity scoop.",
-  "i'm a champion.",
-  "you can't tell me nothing.",
-  "everything i'm not made me everything i am.",
-  "no one man should have all that power."
 ];
 
 (function pickQuote() {
@@ -618,26 +610,6 @@ const QUOTES = [
     el.textContent = QUOTES[i];
     try { localStorage.setItem("yzycat-quote", String(i)); } catch (e) {}
 })();
-
-function fitQuote() {
-    const q = document.getElementById("quote");
-    const box = q.parentElement;
-    if (!q.textContent || !box.clientWidth || !box.clientHeight) return;
-    let lo = 14, hi = Math.min(box.clientWidth * 0.95, box.clientHeight * 1.1, 560);
-    for (let i = 0; i < 14; i++) {
-        const mid = (lo + hi) / 2;
-        q.style.fontSize = mid + "px";
-        if (q.offsetHeight <= box.clientHeight && q.scrollWidth <= box.clientWidth) lo = mid;
-        else hi = mid;
-    }
-    q.style.fontSize = lo + "px";
-}
-
-window.addEventListener("resize", fitQuote);
-window.addEventListener("orientationchange", fitQuote);
-if (window.ResizeObserver) new ResizeObserver(fitQuote).observe(document.querySelector(".stage"));
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitQuote);
-fitQuote();
 
 function syncsafe(b, o) { return ((b[o] & 127) << 21) | ((b[o + 1] & 127) << 14) | ((b[o + 2] & 127) << 7) | (b[o + 3] & 127); }
 
