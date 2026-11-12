@@ -174,17 +174,6 @@ body:not(.landed) .hero h1 span { opacity: 0; }
     width: min(340px, 100%);
     flex: none;
 }
-.dl {
-    background: none;
-    border: 0;
-    color: var(--mute);
-    font: inherit;
-    font-size: 12px;
-    letter-spacing: .04em;
-    cursor: pointer;
-    padding: 6px 2px;
-    transition: color .3s ease;
-}
 .np .art {
     position: relative;
     width: 62px;
@@ -275,12 +264,12 @@ body:not(.landed) .hero h1 span { opacity: 0; }
 .np.playing #npPlay .i-pause { display: block; }
 .np.playing #npPlay .i-play { display: none; }
 
-.top, .np, .dl {
+.top, .np {
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 1.4s ease .1s, transform 1.4s ease .1s;
 }
-body.landed .top, body.landed .np.ready, body.landed .np.ready + .dl { opacity: 1; transform: none; }
+body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
 
 #intro {
     position: fixed;
@@ -364,13 +353,11 @@ body.landed .top, body.landed .np.ready, body.landed .np.ready + .dl { opacity: 
 @media (hover: hover) {
     nav a:hover { color: var(--fg); }
     nav a:hover::after { transform: scaleX(1); }
-    .dl:hover { color: var(--fg); }
 }
 @media (max-width: 700px) {
     :root { --pad: 6vw; }
     .bottom { flex-direction: column; align-items: stretch; gap: 18px; }
     .npwrap { order: -1; width: 100%; align-items: stretch; }
-    .dl { align-self: flex-end; }
 }
 @media (max-width: 420px) {
     nav { font-size: 12px; }
@@ -383,7 +370,7 @@ body.landed .top, body.landed .np.ready, body.landed .np.ready + .dl { opacity: 
     nav { font-size: 15px; }
 }
 @media (prefers-reduced-motion: reduce) {
-    #veil, #mark, .top, .np, .dl, #gate, .quote span { transition: none !important; }
+    #veil, #mark, .top, .np, #gate, .quote span { transition: none !important; }
     #label, .np.playing .eq i { animation: none !important; }
 }
 </style>
@@ -426,7 +413,6 @@ body.landed .top, body.landed .np.ready, body.landed .np.ready + .dl { opacity: 
                     <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
                 </button>
             </aside>
-            <button class="dl" id="dl" type="button">download folder</button>
         </div>
     </div>
 </main>
@@ -492,10 +478,11 @@ function toggleMusic() {
 function startMusic() {
     if (!wantsSound) return;
     playMusic(2500).catch(() => {
-        const retry = () => {
+        const retry = e => {
             document.removeEventListener("pointerup", retry, true);
             document.removeEventListener("touchend", retry, true);
             document.removeEventListener("keydown", retry, true);
+            if (e && e.target && e.target.closest && e.target.closest("#npPlay, .row, .skip, #seek")) return;
             if (wantsSound && music.paused) playMusic(2500).catch(() => {});
         };
         document.addEventListener("pointerup", retry, true);
@@ -880,115 +867,6 @@ function showCard(tags) {
         } catch (e) {}
     }
 }
-
-const FOLDER = "yzymusic";
-const MUSIC_DIR = "yzymusic2/";
-const dl = document.getElementById("dl");
-let dlBusy = false;
-
-const CRC_TABLE = (() => {
-    const t = new Uint32Array(256);
-    for (let n = 0; n < 256; n++) {
-        let c = n;
-        for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
-        t[n] = c >>> 0;
-    }
-    return t;
-})();
-
-function crc32(bytes) {
-    let c = 0xFFFFFFFF;
-    for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 255] ^ (c >>> 8);
-    return (c ^ 0xFFFFFFFF) >>> 0;
-}
-
-function buildZip(files) {
-    const enc = new TextEncoder();
-    const parts = [], central = [];
-    let offset = 0;
-    const d = new Date();
-    const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
-    const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
-    files.forEach(f => {
-        const name = enc.encode(f.name);
-        const crc = crc32(f.data);
-        const size = f.data.length;
-        const lh = new DataView(new ArrayBuffer(30));
-        lh.setUint32(0, 0x04034b50, true);
-        lh.setUint16(4, 20, true);
-        lh.setUint16(6, 0x0800, true);
-        lh.setUint16(8, 0, true);
-        lh.setUint16(10, time, true);
-        lh.setUint16(12, date, true);
-        lh.setUint32(14, crc, true);
-        lh.setUint32(18, size, true);
-        lh.setUint32(22, size, true);
-        lh.setUint16(26, name.length, true);
-        lh.setUint16(28, 0, true);
-        parts.push(new Uint8Array(lh.buffer), name, f.data);
-        const ch = new DataView(new ArrayBuffer(46));
-        ch.setUint32(0, 0x02014b50, true);
-        ch.setUint16(4, 20, true);
-        ch.setUint16(6, 20, true);
-        ch.setUint16(8, 0x0800, true);
-        ch.setUint16(10, 0, true);
-        ch.setUint16(12, time, true);
-        ch.setUint16(14, date, true);
-        ch.setUint32(16, crc, true);
-        ch.setUint32(20, size, true);
-        ch.setUint32(24, size, true);
-        ch.setUint16(28, name.length, true);
-        ch.setUint32(42, offset, true);
-        central.push(new Uint8Array(ch.buffer), name);
-        offset += 30 + name.length + size;
-    });
-    const cdSize = central.reduce((n, c) => n + c.length, 0);
-    const end = new DataView(new ArrayBuffer(22));
-    end.setUint32(0, 0x06054b50, true);
-    end.setUint16(8, files.length, true);
-    end.setUint16(10, files.length, true);
-    end.setUint32(12, cdSize, true);
-    end.setUint32(16, offset, true);
-    return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: "application/zip" });
-}
-
-async function downloadFolder() {
-    if (dlBusy) return;
-    dlBusy = true;
-    dl.textContent = "preparing...";
-    let msg = "downloaded";
-    try {
-        let names = [(music.getAttribute("src") || "").split("/").pop()];
-        try {
-            const r = await fetch(MUSIC_DIR + "files.json", { cache: "no-cache" });
-            if (r.ok) {
-                const list = await r.json();
-                if (Array.isArray(list) && list.length) names = list.filter(n => typeof n === "string" && n.trim());
-            }
-        } catch (e) {}
-        const files = [];
-        for (const raw of names) {
-            const n = raw.split("/").pop();
-            const r = await fetch(MUSIC_DIR + encodeURIComponent(n));
-            if (r.ok) files.push({ name: FOLDER + "/" + n, data: new Uint8Array(await r.arrayBuffer()) });
-        }
-        if (!files.length) throw new Error("empty");
-        const url = URL.createObjectURL(buildZip(files));
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = FOLDER + ".zip";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-    } catch (e) {
-        msg = "couldn't download";
-    }
-    dl.textContent = msg;
-    setTimeout(() => { dl.textContent = "download folder"; dlBusy = false; }, 2500);
-}
-
-dl.addEventListener("click", downloadFolder);
 
 readTags(music.getAttribute("src")).then(showCard).catch(() => showCard({}));
 </script>
