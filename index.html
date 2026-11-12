@@ -22,6 +22,7 @@
     --mute: #8a8a8a;
     --line: #292929;
     --font: "Syne", "Helvetica Neue", Arial, sans-serif;
+    --ease: cubic-bezier(.65, 0, .25, 1);
     --mx: 50%;
     --my: 50%;
     --pad: 5vw;
@@ -42,7 +43,7 @@ body {
     user-select: none;
 }
 
-a:focus-visible, button:focus-visible, #handle:focus-visible {
+a:focus-visible, button:focus-visible, input:focus-visible, #handle:focus-visible {
     outline: 2px solid var(--fg);
     outline-offset: 4px;
 }
@@ -73,18 +74,8 @@ body::after {
         var(--bg);
 }
 
-.top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-}
-nav {
-    display: flex;
-    gap: 6px;
-    font-size: 13px;
-    letter-spacing: .04em;
-}
+.top { display: flex; align-items: center; }
+nav { display: flex; gap: 6px; font-size: 13px; letter-spacing: .04em; }
 nav a {
     color: var(--mute);
     text-decoration: none;
@@ -106,40 +97,6 @@ nav a::after {
 nav a[aria-current] { color: var(--fg); }
 nav a[aria-current]::after { transform: scaleX(1); }
 
-#sound, #lyricsBtn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: none;
-    border: 0;
-    color: var(--mute);
-    font: inherit;
-    font-size: 13px;
-    letter-spacing: .04em;
-    cursor: pointer;
-    padding: 12px 0 12px 12px;
-    margin: -12px 0;
-    min-height: 44px;
-    transition: color .2s;
-}
-#lyricsBtn { padding-left: 14px; }
-#lyricsBtn.on { color: var(--fg); }
-#lyricsBtn.busy { animation: breathe 1.6s ease-in-out infinite; }
-.tools { display: flex; align-items: center; }
-#sound .bars { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
-#sound .bars i {
-    display: block;
-    width: 2px;
-    height: 3px;
-    background: currentColor;
-}
-#sound.on { color: var(--fg); }
-#sound.on .bars i { animation: eq .9s ease-in-out infinite alternate; }
-#sound.on .bars i:nth-child(2) { animation-delay: -.3s; }
-#sound.on .bars i:nth-child(3) { animation-delay: -.6s; }
-#sound.on .bars i:nth-child(4) { animation-delay: -.15s; }
-@keyframes eq { from { height: 3px; } to { height: 12px; } }
-
 .bottom {
     display: flex;
     justify-content: space-between;
@@ -156,8 +113,9 @@ nav a[aria-current]::after { transform: scaleX(1); }
 }
 .hero h1 span {
     display: inline-block;
-    transition: transform .4s cubic-bezier(.2,.8,.2,1);
+    transition: transform .4s cubic-bezier(.2, .8, .2, 1);
 }
+body:not(.landed) .hero h1 span { opacity: 0; }
 
 .np {
     display: flex;
@@ -166,17 +124,18 @@ nav a[aria-current]::after { transform: scaleX(1); }
     width: min(340px, 100%);
     flex: none;
     padding: 10px 14px 10px 10px;
-    border-radius: 16px;
+    border-radius: 18px;
     background: rgba(14, 14, 14, .72);
     border: 1px solid #ffffff14;
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
 }
 .np .art {
+    position: relative;
     width: 62px;
     height: 62px;
     flex: none;
-    border-radius: 10px;
+    border-radius: 11px;
     overflow: hidden;
     background: linear-gradient(135deg, #1a1a1a, #0b0b0b);
     display: grid;
@@ -184,7 +143,25 @@ nav a[aria-current]::after { transform: scaleX(1); }
     color: var(--mute);
     font-size: 22px;
 }
-.np .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.np .art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.np .eq {
+    position: absolute;
+    left: 7px;
+    bottom: 7px;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+    opacity: 0;
+    transition: opacity .3s ease;
+    filter: drop-shadow(0 0 4px #000c);
+}
+.np .eq i { display: block; width: 2px; height: 3px; background: #fff; }
+.np.playing .eq { opacity: 1; }
+.np.playing .eq i { animation: eq .9s ease-in-out infinite alternate; }
+.np .eq i:nth-child(2) { animation-delay: -.3s; }
+.np .eq i:nth-child(3) { animation-delay: -.6s; }
+@keyframes eq { from { height: 3px; } to { height: 12px; } }
 .np .info { flex: 1; min-width: 0; }
 .np .t, .np .a { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .np .t { font-size: 14px; font-weight: 500; letter-spacing: -.01em; color: var(--fg); }
@@ -243,52 +220,12 @@ nav a[aria-current]::after { transform: scaleX(1); }
 .np.playing #npPlay .i-pause { display: block; }
 .np.playing #npPlay .i-play { display: none; }
 
-body:not(.landed) .hero h1 span { opacity: 0; }
-
-.stage.off .lyrics { display: none; }
-.stage {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 14px;
-    padding: 16px 0;
-    max-width: min(900px, 100%);
-    overflow: hidden;
-}
-.lyrics { display: flex; flex-direction: column; gap: 10px; }
-.lyrics p {
-    font-weight: 500;
-    font-size: clamp(18px, 3.4vw, 40px);
-    line-height: 1.15;
-    letter-spacing: -.02em;
-    color: var(--mute);
-    opacity: .38;
-    min-height: 1.15em;
-    overflow-wrap: anywhere;
-    transition: opacity .5s ease;
-}
-.lyrics #lyNow { color: var(--fg); opacity: 1; }
-.lyrics #lyNow.pop { animation: rise .45s cubic-bezier(.2,.8,.2,1); }
-@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
-.heard {
-    font-size: 13px;
-    letter-spacing: .04em;
-    color: var(--mute);
-    min-height: 1.4em;
-    opacity: 0;
-    transition: opacity .4s ease;
-}
-.heard.show { opacity: 1; }
-.heard b { color: var(--fg); font-weight: 500; }
-
-.top, .np, .stage {
+.top, .np {
     opacity: 0;
     transform: translateY(10px);
     transition: opacity .9s ease .1s, transform .9s ease .1s;
 }
-body.landed .top, body.landed .stage, body.landed .np.ready { opacity: 1; transform: none; }
+body.landed .top, body.landed .np.ready { opacity: 1; transform: none; }
 
 #intro {
     position: fixed;
@@ -298,12 +235,12 @@ body.landed .top, body.landed .stage, body.landed .np.ready { opacity: 1; transf
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 56px;
+    gap: 64px;
 }
 #veil { position: fixed; inset: 0; z-index: 10; background: var(--bg); transition: opacity .9s ease; }
 #veil.done { opacity: 0; pointer-events: none; }
 #intro.done { pointer-events: none; }
-#intro.done #slider, #intro.done #hint { opacity: 0; transition: opacity .4s ease; }
+#intro.done #gate { opacity: 0; transform: scale(.94); transition: opacity .45s ease, transform .6s var(--ease); }
 
 #mark {
     font-weight: 800;
@@ -316,56 +253,63 @@ body.landed .top, body.landed .stage, body.landed .np.ready { opacity: 1; transf
     filter: blur(8px);
 }
 
-#slider {
+#gate {
     position: relative;
-    width: min(320px, 70vw);
-    height: 2px;
-    background: var(--line);
-    border-radius: 10px;
+    width: min(300px, 78vw);
+    height: 56px;
+    border-radius: 28px;
+    background: #0d0d0d;
+    border: 1px solid #222;
+    overflow: hidden;
     touch-action: none;
+    cursor: pointer;
 }
-#slider::before { content: ""; position: absolute; inset: -26px -14px; }
-
-#progress {
+#fill {
     position: absolute;
     inset: 0 auto 0 0;
-    width: 0;
-    background: var(--fg);
-    border-radius: 10px;
+    width: 56px;
+    border-radius: 28px;
+    background: linear-gradient(90deg, #161616, #262626);
 }
+#label {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding-left: 44px;
+    font-size: 13px;
+    letter-spacing: .1em;
+    color: transparent;
+    background: linear-gradient(100deg, #4a4a4a 30%, #ffffff 50%, #4a4a4a 70%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shimmer 2.8s linear infinite;
+    pointer-events: none;
+}
+@keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
 #handle {
     position: absolute;
-    left: 0;
-    top: 50%;
-    width: 24px;
-    height: 24px;
+    left: 4px;
+    top: 4px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: var(--fg);
-    transform: translate(-50%, -50%);
+    color: #000;
+    display: grid;
+    place-items: center;
     cursor: grab;
     touch-action: none;
-    box-shadow: 0 0 15px #ffffff18;
-    transition: box-shadow .2s;
+    box-shadow: 0 0 18px #ffffff1a;
 }
 #handle:active { cursor: grabbing; }
-#hint {
-    color: var(--mute);
-    font-size: 12px;
-    letter-spacing: .04em;
-    animation: breathe 2.4s ease-in-out infinite;
-}
-@keyframes breathe { 50% { opacity: .35; } }
+#handle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (hover: hover) {
     nav a:hover { color: var(--fg); }
     nav a:hover::after { transform: scaleX(1); }
-    #sound:hover, #lyricsBtn:hover { color: var(--fg); }
     .hero h1 span:hover { transform: translateY(-.06em); }
-    #handle:hover { box-shadow: 0 0 24px #ffffff55; }
-}
-@media (pointer: coarse) {
-    #handle { width: 30px; height: 30px; }
-    #slider::before { inset: -32px -18px; }
 }
 @media (max-width: 700px) {
     :root { --pad: 6vw; }
@@ -373,8 +317,6 @@ body.landed .top, body.landed .stage, body.landed .np.ready { opacity: 1; transf
     .np { order: -1; width: 100%; }
 }
 @media (max-width: 420px) {
-    #soundLabel { display: none; }
-    #lyricsBtn { padding-left: 10px; }
     nav { font-size: 12px; }
 }
 @media (max-height: 480px) and (orientation: landscape) {
@@ -382,11 +324,11 @@ body.landed .top, body.landed .stage, body.landed .np.ready { opacity: 1; transf
     #website { padding-top: max(18px, env(safe-area-inset-top, 0px)); padding-bottom: max(18px, env(safe-area-inset-bottom, 0px)); }
 }
 @media (min-width: 1600px) {
-    nav, #sound { font-size: 15px; }
+    nav { font-size: 15px; }
 }
 @media (prefers-reduced-motion: reduce) {
-    #veil, #mark, .top, .np, .stage { transition: none !important; }
-    #hint, #sound.on .bars i, #lyricsBtn.busy, .lyrics #lyNow.pop { animation: none !important; }
+    #veil, #mark, .top, .np, #gate { transition: none !important; }
+    #label, .np.playing .eq i { animation: none !important; }
 }
 </style>
 </head>
@@ -402,24 +344,6 @@ body.landed .top, body.landed .stage, body.landed .np.ready { opacity: 1; transf
             <a href="#">work</a>
             <a href="#">contact</a>
         </nav>
-        <div class="tools">
-            <button id="lyricsBtn" type="button" aria-pressed="false" aria-label="Lyrics">
-                <span id="lyricsLabel">lyrics</span>
-            </button>
-            <button id="sound" type="button" aria-pressed="false" aria-label="Toggle music">
-                <span class="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-                <span id="soundLabel">sound off</span>
-            </button>
-        </div>
-    </div>
-
-    <div class="stage">
-        <div class="lyrics" aria-live="off">
-            <p id="lyPrev"></p>
-            <p id="lyNow"></p>
-            <p id="lyNext"></p>
-        </div>
-        <div class="heard" id="heard" aria-live="polite"></div>
     </div>
 
     <div class="bottom">
@@ -427,7 +351,11 @@ body.landed .top, body.landed .stage, body.landed .np.ready { opacity: 1; transf
             <h1 aria-label="yzycat"><span aria-hidden="true">y</span><span aria-hidden="true">z</span><span aria-hidden="true">y</span><span aria-hidden="true">c</span><span aria-hidden="true">a</span><span aria-hidden="true">t</span></h1>
         </header>
         <aside class="np" id="np" aria-label="Now playing">
-            <div class="art" id="art" aria-hidden="true">&#9834;</div>
+            <div class="art" aria-hidden="true">
+                <span id="artFallback">&#9834;</span>
+                <img id="artImg" alt="" hidden>
+                <div class="eq"><i></i><i></i><i></i></div>
+            </div>
             <div class="info">
                 <div class="t" id="npTitle"></div>
                 <div class="a" id="npArtist"></div>
@@ -446,36 +374,32 @@ body.landed .top, body.landed .stage, body.landed .np.ready { opacity: 1; transf
 
 <div id="intro">
     <div id="mark" aria-hidden="true">yzycat</div>
-    <div id="slider">
-        <div id="progress"></div>
-        <div id="handle" role="slider" tabindex="0" aria-label="Slide to enter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+    <div id="gate">
+        <div id="fill"></div>
+        <div id="label" aria-hidden="true">slide to open</div>
+        <div id="handle" role="slider" tabindex="0" aria-label="Slide to open" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </div>
     </div>
-    <div id="hint">slide to enter</div>
 </div>
 
 <script>
 const intro = document.getElementById("intro");
 const veil = document.getElementById("veil");
-const slider = document.getElementById("slider");
+const gate = document.getElementById("gate");
 const handle = document.getElementById("handle");
-const progress = document.getElementById("progress");
+const fill = document.getElementById("fill");
+const label = document.getElementById("label");
 const mark = document.getElementById("mark");
 const site = document.getElementById("website");
 const music = document.getElementById("music");
-const soundBtn = document.getElementById("sound");
-const soundLabel = document.getElementById("soundLabel");
 
 const VOLUME = 0.6;
+const THUMB = 56;
 let dragging = false, completed = false, pointerId = null, pct = 0;
-let wantsSound = true, fadeTimer = null;
+let wantsSound = true, fadeTimer = null, resumeOnShow = false;
 
 try { if (localStorage.getItem("yzycat-sound") === "off") wantsSound = false; } catch (e) {}
-
-function setSoundUI(on) {
-    soundBtn.classList.toggle("on", on);
-    soundBtn.setAttribute("aria-pressed", String(on));
-    soundLabel.textContent = on ? "sound on" : "sound off";
-}
 
 function fadeTo(target, ms, done) {
     clearInterval(fadeTimer);
@@ -487,22 +411,31 @@ function fadeTo(target, ms, done) {
     }, 30);
 }
 
-function tryPlay() {
+function playMusic(ms) {
     music.volume = 0;
     const p = music.play();
-    if (!p || !p.then) return Promise.resolve();
-    return p.then(() => { setSoundUI(true); fadeTo(VOLUME, 2500); });
+    return (p && p.then ? p : Promise.resolve()).then(() => fadeTo(VOLUME, ms || 1200));
+}
+
+function toggleMusic() {
+    if (music.paused) {
+        wantsSound = true;
+        playMusic(800).catch(() => {});
+    } else {
+        wantsSound = false;
+        fadeTo(0, 400, () => music.pause());
+    }
+    try { localStorage.setItem("yzycat-sound", wantsSound ? "on" : "off"); } catch (e) {}
 }
 
 function startMusic() {
-    if (!wantsSound) return setSoundUI(false);
-    tryPlay().catch(() => {
-        setSoundUI(false);
+    if (!wantsSound) return;
+    playMusic(2500).catch(() => {
         const retry = () => {
             document.removeEventListener("pointerup", retry, true);
             document.removeEventListener("touchend", retry, true);
             document.removeEventListener("keydown", retry, true);
-            if (wantsSound && music.paused) tryPlay().catch(() => {});
+            if (wantsSound && music.paused) playMusic(2500).catch(() => {});
         };
         document.addEventListener("pointerup", retry, true);
         document.addEventListener("touchend", retry, true);
@@ -510,40 +443,36 @@ function startMusic() {
     });
 }
 
-soundBtn.addEventListener("click", () => {
-    if (music.paused) {
-        wantsSound = true;
-        music.volume = 0;
-        music.play().then(() => { setSoundUI(true); fadeTo(VOLUME, 800); }).catch(() => setSoundUI(false));
-    } else {
-        wantsSound = false;
-        setSoundUI(false);
-        fadeTo(0, 500, () => music.pause());
+document.addEventListener("visibilitychange", () => {
+    if (!completed) return;
+    if (document.hidden) {
+        if (!music.paused) { resumeOnShow = true; music.pause(); }
+    } else if (resumeOnShow) {
+        resumeOnShow = false;
+        music.play().catch(() => {});
     }
-    try { localStorage.setItem("yzycat-sound", wantsSound ? "on" : "off"); } catch (e) {}
 });
 
-document.addEventListener("visibilitychange", () => {
-    if (!completed || !wantsSound) return;
-    if (document.hidden) music.pause();
-    else music.play().catch(() => {});
-});
+function range() { return Math.max(1, gate.clientWidth - THUMB); }
 
 function render(p, animate) {
     pct = Math.max(0, Math.min(p, 100));
-    const t = animate ? ".35s ease" : "";
-    handle.style.transition = animate ? "left " + t : "";
-    progress.style.transition = animate ? "width " + t : "";
-    handle.style.left = pct + "%";
-    progress.style.width = pct + "%";
+    const x = pct / 100 * range();
+    const t = animate ? ".35s cubic-bezier(.2,.8,.2,1)" : "none";
+    handle.style.transition = animate ? "transform " + t : "none";
+    fill.style.transition = animate ? "width " + t : "none";
+    handle.style.transform = "translateX(" + x + "px)";
+    fill.style.width = (THUMB + x) + "px";
     handle.setAttribute("aria-valuenow", Math.round(pct));
+    label.style.opacity = Math.max(0, 1 - pct / 55);
     mark.style.opacity = .12 + pct / 100 * .88;
     mark.style.filter = "blur(" + (8 - pct / 100 * 8) + "px)";
+    veil.style.opacity = 1 - pct / 100 * .55;
 }
 
 function fromPointer(x) {
-    const r = slider.getBoundingClientRect();
-    return (x - r.left) / r.width * 100;
+    const r = gate.getBoundingClientRect();
+    return (x - r.left - THUMB / 2) / range() * 100;
 }
 
 function complete() {
@@ -551,11 +480,11 @@ function complete() {
     completed = true;
     dragging = false;
     render(100, true);
+    veil.style.opacity = "";
     intro.classList.add("done");
     veil.classList.add("done");
-    document.body.style.overflow = "hidden";
+    if (navigator.vibrate) navigator.vibrate(12);
     startMusic();
-    autoLyrics();
     flyToTitle();
 }
 
@@ -596,19 +525,19 @@ function flyToTitle() {
 
 function settle() {
     if (completed) return;
-    if (pct >= 98) complete(); else render(0, true);
+    if (pct >= 92) complete(); else render(0, true);
 }
 
-handle.addEventListener("pointerdown", e => {
+gate.addEventListener("pointerdown", e => {
     if (completed || dragging) return;
     dragging = true;
     pointerId = e.pointerId;
-    handle.setPointerCapture(pointerId);
+    gate.setPointerCapture(pointerId);
+    render(fromPointer(e.clientX), e.target !== handle);
 });
-handle.addEventListener("pointermove", e => {
+gate.addEventListener("pointermove", e => {
     if (!dragging || completed || e.pointerId !== pointerId) return;
     render(fromPointer(e.clientX));
-    if (pct >= 98) complete();
 });
 function release(e) {
     if (!dragging || e.pointerId !== pointerId) return;
@@ -616,26 +545,18 @@ function release(e) {
     pointerId = null;
     settle();
 }
-handle.addEventListener("pointerup", release);
-handle.addEventListener("pointercancel", release);
-
-slider.addEventListener("pointerdown", e => {
-    if (completed || dragging || e.target === handle) return;
-    render(fromPointer(e.clientX), true);
-    dragging = true;
-    pointerId = e.pointerId;
-    handle.setPointerCapture(pointerId);
-});
+gate.addEventListener("pointerup", release);
+gate.addEventListener("pointercancel", release);
 
 handle.addEventListener("keydown", e => {
     if (completed) return;
-    if (e.key === "ArrowRight" || e.key === "ArrowUp") render(pct + 10, true);
-    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") render(pct - 10, true);
-    else if (e.key === "Enter" || e.key === "End") render(100, true);
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") render(pct + 12, true);
+    else if (e.key === "ArrowLeft" || e.key === "ArrowDown") render(pct - 12, true);
+    else if (e.key === "Enter" || e.key === "End" || e.key === " ") render(100, true);
     else if (e.key === "Home") render(0, true);
     else return;
     e.preventDefault();
-    if (pct >= 98) complete();
+    if (pct >= 92) complete();
 });
 
 function moveSpot(e) {
@@ -645,139 +566,7 @@ function moveSpot(e) {
 site.addEventListener("pointermove", moveSpot);
 site.addEventListener("pointerdown", moveSpot);
 
-const lyPrev = document.getElementById("lyPrev");
-const lyNow = document.getElementById("lyNow");
-const lyNext = document.getElementById("lyNext");
-const lyricsBtn = document.getElementById("lyricsBtn");
-const lyricsLabel = document.getElementById("lyricsLabel");
-const heard = document.getElementById("heard");
-const stage = document.querySelector(".stage");
-const CACHE_KEY = "yzycat-lyrics:" + music.getAttribute("src");
-let lines = [], lyIdx = -2, generating = false, lyricsOn = true, heardTimer = null;
-
-function normalize(data) {
-    return (Array.isArray(data) ? data : (data && data.lines) || [])
-        .filter(l => l && typeof l.t === "number" && l.text)
-        .sort((a, b) => a.t - b.t);
-}
-
-function say(text, ms) {
-    heard.textContent = text;
-    heard.classList.add("show");
-    clearTimeout(heardTimer);
-    heardTimer = setTimeout(() => heard.classList.remove("show"), ms || 4000);
-}
-
-function updateBtn() {
-    lyricsBtn.classList.toggle("busy", generating);
-    lyricsBtn.classList.toggle("on", !generating && lines.length > 0 && lyricsOn);
-    lyricsBtn.setAttribute("aria-pressed", String(lines.length > 0 && lyricsOn));
-    stage.classList.toggle("off", !lyricsOn);
-    if (generating) return;
-    lyricsLabel.textContent = !lines.length ? "lyrics" : lyricsOn ? "lyrics on" : "lyrics off";
-}
-
-function showLyrics() {
-    if (!lines.length) return;
-    const t = music.currentTime + 0.15;
-    let i = -1;
-    for (let k = 0; k < lines.length; k++) { if (lines[k].t <= t) i = k; else break; }
-    if (i === lyIdx) return;
-    lyIdx = i;
-    lyPrev.textContent = i > 0 ? lines[i - 1].text : "";
-    lyNow.textContent = i >= 0 ? lines[i].text : "";
-    lyNext.textContent = i + 1 < lines.length ? lines[i + 1].text : "";
-    lyNow.classList.remove("pop");
-    void lyNow.offsetWidth;
-    lyNow.classList.add("pop");
-}
-
-function setLines(arr) {
-    lines = arr;
-    lyIdx = -2;
-    showLyrics();
-    updateBtn();
-}
-
-setInterval(showLyrics, 100);
-music.addEventListener("seeked", showLyrics);
-
-const lyricsReady = fetch("yzymusic/lyrics.json", { cache: "no-cache" })
-    .then(r => r.ok ? r.json() : [])
-    .catch(() => [])
-    .then(d => {
-        let l = normalize(d);
-        if (!l.length) {
-            try { l = normalize(JSON.parse(localStorage.getItem(CACHE_KEY) || "[]")); } catch (e) {}
-        }
-        setLines(l);
-    });
-
-async function generateLyrics() {
-    if (generating || lines.length) return;
-    generating = true;
-    lyricsLabel.textContent = "model...";
-    updateBtn();
-    try {
-        say("loading the voice model, first time only", 10000);
-        const { pipeline } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2/+esm");
-        const asr = await pipeline("automatic-speech-recognition", "Xenova/whisper-base.en", {
-            progress_callback: p => {
-                if (p.status === "progress" && typeof p.progress === "number") {
-                    lyricsLabel.textContent = "model " + Math.round(p.progress) + "%";
-                }
-            }
-        });
-        lyricsLabel.textContent = "listening...";
-        say("listening to the song, this takes a minute", 600000);
-        const ab = await (await fetch(music.currentSrc || music.src)).arrayBuffer();
-        const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-        const buf = await ctx.decodeAudioData(ab);
-        ctx.close();
-        const mono = new Float32Array(buf.length);
-        for (let c = 0; c < buf.numberOfChannels; c++) {
-            const d = buf.getChannelData(c);
-            for (let i = 0; i < d.length; i++) mono[i] += d[i] / buf.numberOfChannels;
-        }
-        const out = await asr(mono, { chunk_length_s: 30, stride_length_s: 5, return_timestamps: true });
-        const arr = (out.chunks || [])
-            .map(c => ({ t: Math.max(0, (c.timestamp && c.timestamp[0]) || 0), text: (c.text || "").trim() }))
-            .filter(l => l.text && !/^[\[(*♪].*[\])*♪]$/.test(l.text));
-        if (!arr.length) throw new Error("no vocals found");
-        try { localStorage.setItem(CACHE_KEY, JSON.stringify(arr)); } catch (e) {}
-        generating = false;
-        setLines(arr);
-        say("lyrics synced, shift+L downloads lyrics.json", 7000);
-    } catch (e) {
-        generating = false;
-        updateBtn();
-        say("couldn't read the song's vocals", 5000);
-    }
-}
-
-function autoLyrics() {
-    lyricsReady.then(() => {
-        const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
-        const saver = navigator.connection && navigator.connection.saveData;
-        if (!lines.length && fine && !saver) generateLyrics();
-    });
-}
-
-lyricsBtn.addEventListener("click", () => {
-    if (generating) return;
-    if (!lines.length) generateLyrics();
-    else { lyricsOn = !lyricsOn; updateBtn(); }
-});
-
-document.addEventListener("keydown", e => {
-    if (!(e.shiftKey && e.key === "L") || !lines.length) return;
-    const url = URL.createObjectURL(new Blob([JSON.stringify(lines, null, 2)], { type: "application/json" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "lyrics.json";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-});
+render(0);
 
 function syncsafe(b, o) { return ((b[o] & 127) << 21) | ((b[o + 1] & 127) << 14) | ((b[o + 2] & 127) << 7) | (b[o + 3] & 127); }
 
@@ -881,7 +670,8 @@ async function readTags(url) {
 const np = document.getElementById("np");
 const npTitle = document.getElementById("npTitle");
 const npArtist = document.getElementById("npArtist");
-const artEl = document.getElementById("art");
+const artImg = document.getElementById("artImg");
+const artFallback = document.getElementById("artFallback");
 const seek = document.getElementById("seek");
 const tCur = document.getElementById("tCur");
 const tDur = document.getElementById("tDur");
@@ -906,7 +696,7 @@ function syncCard() {
 
 ["play", "pause", "timeupdate", "loadedmetadata", "durationchange", "seeked"].forEach(ev => music.addEventListener(ev, syncCard));
 
-document.getElementById("npPlay").addEventListener("click", () => soundBtn.click());
+document.getElementById("npPlay").addEventListener("click", toggleMusic);
 
 seek.addEventListener("input", () => {
     seeking = true;
@@ -932,10 +722,8 @@ function showCard(tags) {
     if (tags.picture && tags.picture.data.length) {
         artType = tags.picture.mime;
         artUrl = URL.createObjectURL(new Blob([tags.picture.data], { type: artType }));
-        const img = new Image();
-        img.alt = "";
-        img.onload = () => { artEl.textContent = ""; artEl.appendChild(img); };
-        img.src = artUrl;
+        artImg.onload = () => { artImg.hidden = false; artFallback.hidden = true; };
+        artImg.src = artUrl;
     }
     np.classList.add("ready");
     if ("mediaSession" in navigator && window.MediaMetadata) {
@@ -946,15 +734,14 @@ function showCard(tags) {
                 album: tags.album || "",
                 artwork: artUrl ? [{ src: artUrl, sizes: "512x512", type: artType }] : []
             });
-            navigator.mediaSession.setActionHandler("play", () => { if (music.paused) soundBtn.click(); });
-            navigator.mediaSession.setActionHandler("pause", () => { if (!music.paused) soundBtn.click(); });
+            navigator.mediaSession.setActionHandler("play", () => { if (music.paused) toggleMusic(); });
+            navigator.mediaSession.setActionHandler("pause", () => { if (!music.paused) toggleMusic(); });
             navigator.mediaSession.setActionHandler("seekto", d => { if (d && isFinite(d.seekTime)) music.currentTime = d.seekTime; });
         } catch (e) {}
     }
 }
 
 readTags(music.getAttribute("src")).then(showCard).catch(() => showCard({}));
-
 </script>
 
 </body>
