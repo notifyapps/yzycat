@@ -441,7 +441,7 @@ let dragging = false, completed = false, pointerId = null, pct = 0;
 let wantsSound = true, fadeTimer = null;
 let audioContext = null, audioFilter = null;
 let audioState = "onscreen";
-let appBlurred = false;
+let appBlurTimer = null;
 
 try { if (localStorage.getItem("yzycat-sound") === "off") wantsSound = false; } catch (e) {}
 
@@ -474,23 +474,30 @@ function setupAudioFilter() {
     }
 }
 
-function updateAudioFocus() {
-    if (appBlurred) audioState = "app";
-    else if (document.hidden) audioState = "tab";
-    else audioState = "onscreen";
-
-    const settings = {
+function getAudioSettings() {
+    return {
         onscreen: { volume: VOLUME, cutoff: 22000, time: 0.28 },
         tab: { volume: 0.18, cutoff: 1100, time: 0.45 },
-        app: { volume: 0.065, cutoff: 420, time: 0.7 }
+        app: { volume: 0.045, cutoff: 260, time: 0.8 }
     }[audioState];
+}
 
+function updateAudioFocus() {
+    // A hidden document means the user changed browser tabs. A blurred but
+    // still-visible window usually means they switched to another app.
+    if (document.hidden) audioState = "tab";
+    else if (appBlurTimer !== null) audioState = "app";
+    else audioState = "onscreen";
+
+    const settings = getAudioSettings();
     if (audioFilter && audioContext) {
         const now = audioContext.currentTime;
         audioFilter.frequency.cancelScheduledValues(now);
         audioFilter.frequency.setTargetAtTime(settings.cutoff, now, settings.time);
     }
-    if (!music.paused && wantsSound) fadeTo(settings.volume, audioState === "app" ? 1100 : 700);
+    if (!music.paused && wantsSound) {
+        fadeTo(settings.volume, audioState === "app" ? 1400 : 850);
+    }
 }
 
 function playMusic(ms) {
@@ -500,7 +507,8 @@ function playMusic(ms) {
     const p = music.play();
     return (p && p.then ? p : Promise.resolve()).then(() => {
         updateAudioFocus();
-        fadeTo(muffled ? 0.18 : VOLUME, ms || 1200);
+        const settings = getAudioSettings();
+        fadeTo(settings.volume, ms || 1200);
     });
 }
 
@@ -530,13 +538,37 @@ function startMusic() {
     });
 }
 
-document.addEventListener("visibilitychange", updateAudioFocus);
-window.addEventListener("blur", () => {
-    appBlurred = true;
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        clearTimeout(appBlurTimer);
+        appBlurTimer = null;
+        audioState = "tab";
+    } else {
+        clearTimeout(appBlurTimer);
+        appBlurTimer = null;
+        audioState = "onscreen";
+    }
     updateAudioFocus();
 });
+
+window.addEventListener("blur", () => {
+    clearTimeout(appBlurTimer);
+    // Wait briefly so a browser-tab switch can report document.hidden first.
+    appBlurTimer = setTimeout(() => {
+        if (document.hidden) {
+            appBlurTimer = null;
+            audioState = "tab";
+        } else {
+            audioState = "app";
+        }
+        updateAudioFocus();
+    }, 140);
+});
+
 window.addEventListener("focus", () => {
-    appBlurred = false;
+    clearTimeout(appBlurTimer);
+    appBlurTimer = null;
+    audioState = document.hidden ? "tab" : "onscreen";
     updateAudioFocus();
 });
 
