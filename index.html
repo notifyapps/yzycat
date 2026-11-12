@@ -440,7 +440,8 @@ const THUMB = 56;
 let dragging = false, completed = false, pointerId = null, pct = 0;
 let wantsSound = true, fadeTimer = null;
 let audioContext = null, audioFilter = null;
-let muffled = false;
+let audioState = "onscreen";
+let appBlurred = false;
 
 try { if (localStorage.getItem("yzycat-sound") === "off") wantsSound = false; } catch (e) {}
 
@@ -463,7 +464,7 @@ function setupAudioFilter() {
         const source = audioContext.createMediaElementSource(music);
         audioFilter = audioContext.createBiquadFilter();
         audioFilter.type = "lowpass";
-        audioFilter.frequency.value = muffled ? 850 : 22000;
+        audioFilter.frequency.value = audioState === "app" ? 420 : audioState === "tab" ? 1100 : 22000;
         audioFilter.Q.value = 0.7;
         source.connect(audioFilter);
         audioFilter.connect(audioContext.destination);
@@ -474,13 +475,22 @@ function setupAudioFilter() {
 }
 
 function updateAudioFocus() {
-    muffled = document.hidden || !document.hasFocus();
+    if (appBlurred) audioState = "app";
+    else if (document.hidden) audioState = "tab";
+    else audioState = "onscreen";
+
+    const settings = {
+        onscreen: { volume: VOLUME, cutoff: 22000, time: 0.28 },
+        tab: { volume: 0.18, cutoff: 1100, time: 0.45 },
+        app: { volume: 0.065, cutoff: 420, time: 0.7 }
+    }[audioState];
+
     if (audioFilter && audioContext) {
         const now = audioContext.currentTime;
         audioFilter.frequency.cancelScheduledValues(now);
-        audioFilter.frequency.setTargetAtTime(muffled ? 850 : 22000, now, 0.22);
+        audioFilter.frequency.setTargetAtTime(settings.cutoff, now, settings.time);
     }
-    if (!music.paused && wantsSound) fadeTo(muffled ? 0.18 : VOLUME, 650);
+    if (!music.paused && wantsSound) fadeTo(settings.volume, audioState === "app" ? 1100 : 700);
 }
 
 function playMusic(ms) {
@@ -521,8 +531,14 @@ function startMusic() {
 }
 
 document.addEventListener("visibilitychange", updateAudioFocus);
-window.addEventListener("blur", updateAudioFocus);
-window.addEventListener("focus", updateAudioFocus);
+window.addEventListener("blur", () => {
+    appBlurred = true;
+    updateAudioFocus();
+});
+window.addEventListener("focus", () => {
+    appBlurred = false;
+    updateAudioFocus();
+});
 
 function range() { return Math.max(1, gate.clientWidth - THUMB); }
 
