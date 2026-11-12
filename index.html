@@ -438,7 +438,9 @@ const music = document.getElementById("music");
 const VOLUME = 0.6;
 const THUMB = 56;
 let dragging = false, completed = false, pointerId = null, pct = 0;
-let wantsSound = true, fadeTimer = null, resumeOnShow = false;
+let wantsSound = true, fadeTimer = null;
+let audioContext = null, audioFilter = null;
+let muffled = false;
 
 try { if (localStorage.getItem("yzycat-sound") === "off") wantsSound = false; } catch (e) {}
 
@@ -452,10 +454,44 @@ function fadeTo(target, ms, done) {
     }, 30);
 }
 
+function setupAudioFilter() {
+    if (audioFilter) return;
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        audioContext = new AudioContextClass();
+        const source = audioContext.createMediaElementSource(music);
+        audioFilter = audioContext.createBiquadFilter();
+        audioFilter.type = "lowpass";
+        audioFilter.frequency.value = muffled ? 850 : 22000;
+        audioFilter.Q.value = 0.7;
+        source.connect(audioFilter);
+        audioFilter.connect(audioContext.destination);
+    } catch (e) {
+        audioContext = null;
+        audioFilter = null;
+    }
+}
+
+function updateAudioFocus() {
+    muffled = document.hidden || !document.hasFocus();
+    if (audioFilter && audioContext) {
+        const now = audioContext.currentTime;
+        audioFilter.frequency.cancelScheduledValues(now);
+        audioFilter.frequency.setTargetAtTime(muffled ? 850 : 22000, now, 0.22);
+    }
+    if (!music.paused && wantsSound) fadeTo(muffled ? 0.18 : VOLUME, 650);
+}
+
 function playMusic(ms) {
+    setupAudioFilter();
+    if (audioContext && audioContext.state === "suspended") audioContext.resume().catch(() => {});
     music.volume = 0;
     const p = music.play();
-    return (p && p.then ? p : Promise.resolve()).then(() => fadeTo(VOLUME, ms || 1200));
+    return (p && p.then ? p : Promise.resolve()).then(() => {
+        updateAudioFocus();
+        fadeTo(muffled ? 0.18 : VOLUME, ms || 1200);
+    });
 }
 
 function toggleMusic() {
@@ -484,15 +520,9 @@ function startMusic() {
     });
 }
 
-document.addEventListener("visibilitychange", () => {
-    if (!completed) return;
-    if (document.hidden) {
-        if (!music.paused) { resumeOnShow = true; music.pause(); }
-    } else if (resumeOnShow) {
-        resumeOnShow = false;
-        music.play().catch(() => {});
-    }
-});
+document.addEventListener("visibilitychange", updateAudioFocus);
+window.addEventListener("blur", updateAudioFocus);
+window.addEventListener("focus", updateAudioFocus);
 
 function range() { return Math.max(1, gate.clientWidth - THUMB); }
 
